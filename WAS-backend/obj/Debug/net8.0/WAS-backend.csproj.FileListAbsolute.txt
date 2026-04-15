@@ -182,3 +182,4 @@ C:\pfe-develloppement\WAS-backend\obj\Debug\net8.0\refint\WAS-backend.dll
 C:\pfe-develloppement\WAS-backend\obj\Debug\net8.0\WAS-backend.pdb
 C:\pfe-develloppement\WAS-backend\obj\Debug\net8.0\WAS-backend.genruntimeconfig.cache
 C:\pfe-develloppement\WAS-backend\obj\Debug\net8.0\ref\WAS-backend.dll
+C:\pfe-develloppement\WAS-backend\obj\Debug\net8.0\WAS-backend.sourcelink.json
