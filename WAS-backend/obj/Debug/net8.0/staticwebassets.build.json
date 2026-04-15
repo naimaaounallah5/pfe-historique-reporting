@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "xIfEaq7LKc+2c0PQ1kr2pqd8T6rLQAkpR2zirmgyHrw=",
+  "Source": "WAS-backend",
+  "BasePath": "_content/WAS-backend",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

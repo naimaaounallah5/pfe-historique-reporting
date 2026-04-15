@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<title>WAS BI — KPIs & Constellation</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#060a12;font-family:'Inter',sans-serif;color:#e2e8f0;min-width:900px;}
+
+/* ─── NAV TABS ─── */
+.tabs{display:flex;gap:0;background:#0a0f1a;border-bottom:2px solid #1e293b;position:sticky;top:0;z-index:100;}
+.tab{padding:14px 32px;font-size:0.78rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;color:#475569;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s;}
+.tab:hover{color:#94a3b8;}
+.tab.active{color:#e2e8f0;border-bottom-color:#6366f1;}
+
+/* ─── SECTIONS ─── */
+.section{display:none;padding:32px 40px;}
+.section.active{display:block;}
+
+/* ══════════════════════════════
+   PAGE 1 — CONSTELLATION
+══════════════════════════════ */
+.page-title{text-align:center;margin-bottom:28px;}
+.page-title h2{font-size:1.25rem;font-weight:700;color:#f1f5f9;margin-bottom:4px;}
+.page-title p{font-size:0.7rem;color:#475569;letter-spacing:0.12em;text-transform:uppercase;}
+
+.cst-layout{display:grid;grid-template-columns:200px 1fr 200px;gap:14px;max-width:1160px;margin:0 auto;position:relative;}
+.cst-left,.cst-right{display:flex;flex-direction:column;gap:10px;}
+.cst-center{display:flex;flex-direction:column;gap:10px;}
+
+/* DIM cards */
+.dim{border-radius:11px;padding:11px 13px;border:1.5px solid;font-size:0.72rem;}
+.dim-hd{display:flex;align-items:center;gap:6px;margin-bottom:7px;}
+.dim-badge{font-size:0.5rem;font-weight:700;letter-spacing:.1em;padding:2px 5px;border-radius:4px;text-transform:uppercase;}
+.dim-name{font-size:0.82rem;font-weight:700;}
+.dim-src{margin-top:6px;padding-top:4px;border-top:1px solid rgba(255,255,255,.05);font-size:0.56rem;opacity:.45;font-style:italic;}
+.fl{display:flex;flex-direction:column;gap:2px;}
+.f{display:flex;align-items:flex-start;gap:4px;padding:1px 0;}
+.pk{background:#fbbf2422;border-radius:3px;padding:1px 4px;color:#fbbf24;font-size:.55rem;font-weight:700;min-width:20px;text-align:center;flex-shrink:0;}
+.fk{background:#60a5fa22;border-radius:3px;padding:1px 4px;color:#60a5fa;font-size:.55rem;font-weight:700;min-width:20px;text-align:center;flex-shrink:0;}
+.m{background:#4ade8022;border-radius:3px;padding:1px 4px;color:#4ade80;font-size:.55rem;font-weight:700;min-width:20px;text-align:center;flex-shrink:0;}
+.sp{min-width:20px;flex-shrink:0;}
+.fn{color:#cbd5e1;font-size:.65rem;line-height:1.4;}
+.ft{color:#475569;font-size:.55rem;}
+.kb{font-size:.48rem;padding:1px 3px;border-radius:3px;font-weight:700;margin-left:2px;}
+
+/* dim themes */
+.d-machine{background:#0c1b28;border-color:#0ea5e9;}
+.d-machine .dim-badge{background:#0c4a6e;color:#38bdf8;}
+.d-machine .dim-name{color:#38bdf8;}
+.d-client{background:#180f2e;border-color:#a78bfa;}
+.d-client .dim-badge{background:#4c1d95;color:#c4b5fd;}
+.d-client .dim-name{color:#c4b5fd;}
+.d-fourn{background:#1a1030;border-color:#c084fc;}
+.d-fourn .dim-badge{background:#4c1d95;color:#e9d5ff;}
+.d-fourn .dim-name{color:#e9d5ff;}
+.d-statut{background:#180d30;border-color:#7c3aed;}
+.d-statut .dim-badge{background:#581c87;color:#e9d5ff;}
+.d-statut .dim-name{color:#e9d5ff;}
+
+/* shared block */
+.shared-block{background:#10102a;border:2px solid #6366f1;border-radius:13px;padding:13px;}
+.shared-lbl{text-align:center;font-size:.58rem;color:#818cf8;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:9px;}
+.shared-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.shared-card{background:#1e1b4b;border:1px solid #4338ca;border-radius:9px;padding:9px 11px;}
+
+/* fait cards */
+.fait{border-radius:13px;padding:13px 15px;border:2px solid;}
+.fait-hd{display:flex;align-items:center;gap:7px;margin-bottom:9px;}
+.fait-badge{font-size:.5rem;font-weight:700;letter-spacing:.1em;padding:2px 6px;border-radius:4px;text-transform:uppercase;}
+.fait-name{font-size:.88rem;font-weight:700;}
+.fait-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.s-title{font-size:.55rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.45;margin-bottom:4px;}
+.fait-src{grid-column:1/-1;margin-top:6px;padding-top:4px;border-top:1px solid rgba(255,255,255,.05);font-size:.55rem;opacity:.35;font-style:italic;}
+
+/* kbox */
+.kbox{border-radius:7px;padding:7px 9px;margin-bottom:5px;border-left:3px solid;}
+.ktitle{font-size:.65rem;font-weight:700;margin-bottom:4px;}
+.krow{font-size:.6rem;color:#94a3b8;margin-bottom:1px;line-height:1.4;}
+.kform{font-family:'JetBrains Mono',monospace;font-size:.6rem;background:rgba(0,0,0,.4);padding:4px 6px;border-radius:5px;display:block;margin-top:3px;white-space:pre-wrap;line-height:1.5;}
+
+/* dim tags */
+.dim-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;padding-top:7px;border-top:1px solid rgba(255,255,255,.07);}
+.dim-tag{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:6px;font-size:.6rem;font-weight:700;border:1px solid;}
+.dt-t{background:#1a1a35;border-color:#6366f1;color:#a5b4fc;}
+.dt-p{background:#1a1a35;border-color:#818cf8;color:#c4b5fd;}
+.dt-m{background:#0f1e30;border-color:#0ea5e9;color:#38bdf8;}
+.dt-c{background:#1a1030;border-color:#a78bfa;color:#c4b5fd;}
+.dt-f{background:#1a1030;border-color:#c084fc;color:#e9d5ff;}
+.dt-s{background:#1a1030;border-color:#7c3aed;color:#e9d5ff;}
+
+/* fait themes */
+.f-prod{background:#040f07;border-color:#22c55e;}
+.f-prod .fait-badge{background:#14532d;color:#4ade80;}
+.f-prod .fait-name{color:#4ade80;}
+.f-ventes{background:#100820;border-color:#a78bfa;}
+.f-ventes .fait-badge{background:#4c1d95;color:#c4b5fd;}
+.f-ventes .fait-name{color:#c4b5fd;}
+.f-stock{background:#040d18;border-color:#0ea5e9;}
+.f-stock .fait-badge{background:#0c4a6e;color:#38bdf8;}
+.f-stock .fait-name{color:#38bdf8;}
+.f-achats{background:#140900;border-color:#f59e0b;}
+.f-achats .fait-badge{background:#78350f;color:#fcd34d;}
+.f-achats .fait-name{color:#fcd34d;}
+.f-qualite{background:#130404;border-color:#ef4444;}
+.f-qualite .fait-badge{background:#7f1d1d;color:#fca5a5;}
+.f-qualite .fait-name{color:#fca5a5;}
+
+/* SVG */
+#svg-overlay{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:5;}
+
+/* ══════════════════════════════
+   PAGE 2 — KPIs
+══════════════════════════════ */
+.kpi-list{display:flex;flex-direction:column;gap:28px;max-width:1100px;margin:0 auto;}
+
+.kpi-card{border-radius:16px;border:2px solid;overflow:hidden;}
+
+/* top banner */
+.kc-top{padding:16px 22px;display:flex;align-items:center;gap:14px;}
+.kc-num{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:800;flex-shrink:0;}
+.kc-meta{}
+.kc-domain{font-size:.58rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.6;margin-bottom:2px;}
+.kc-name{font-size:1.05rem;font-weight:700;}
+
+/* formula */
+.kc-formula{padding:13px 22px;border-top:1px solid rgba(255,255,255,.06);}
+.kc-formula-lbl{font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.5;margin-bottom:8px;}
+.kc-formula-box{font-family:'JetBrains Mono',monospace;font-size:.75rem;padding:12px 15px;border-radius:9px;background:rgba(0,0,0,.4);line-height:1.7;border-left:3px solid;}
+.kc-formula-expl{font-size:.72rem;color:#94a3b8;margin-top:9px;line-height:1.6;padding:8px 12px;background:rgba(255,255,255,.02);border-radius:8px;}
+
+/* axes */
+.kc-axes{padding:14px 22px 18px;}
+.kc-axes-lbl{font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.5;margin-bottom:12px;}
+.axes-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;}
+
+.axe-card{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.07);border-radius:11px;padding:12px 14px;}
+.axe-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.axe-dim-tag{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:6px;font-size:.63rem;font-weight:700;border:1px solid;}
+.axe-graph-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:6px;font-size:.6rem;font-weight:700;background:#1e293b;color:#94a3b8;border:1px solid #334155;}
+.axe-question{font-size:.68rem;font-weight:700;color:#f1f5f9;margin-bottom:4px;}
+.axe-example{font-size:.64rem;color:#64748b;line-height:1.55;}
+.axe-example b{color:#94a3b8;}
+
+/* kpi card themes */
+.kc1{border-color:#a78bfa;}
+.kc1 .kc-top{background:linear-gradient(135deg,#1a0f40,#2d1b69);}
+.kc1 .kc-num{background:#4c1d95;color:#c4b5fd;}
+.kc1 .kc-name{color:#c4b5fd;}
+.kc1 .kc-formula-box{color:#ddd6fe;border-color:#a78bfa;}
+
+.kc2{border-color:#22c55e;}
+.kc2 .kc-top{background:linear-gradient(135deg,#052e16,#14532d);}
+.kc2 .kc-num{background:#14532d;color:#4ade80;}
+.kc2 .kc-name{color:#4ade80;}
+.kc2 .kc-formula-box{color:#86efac;border-color:#22c55e;}
+
+.kc3{border-color:#16a34a;}
+.kc3 .kc-top{background:linear-gradient(135deg,#042010,#0f3d1e);}
+.kc3 .kc-num{background:#166534;color:#86efac;}
+.kc3 .kc-name{color:#86efac;}
+.kc3 .kc-formula-box{color:#bbf7d0;border-color:#16a34a;}
+
+.kc4{border-color:#0ea5e9;}
+.kc4 .kc-top{background:linear-gradient(135deg,#082034,#0c4a6e);}
+.kc4 .kc-num{background:#0c4a6e;color:#38bdf8;}
+.kc4 .kc-name{color:#38bdf8;}
+.kc4 .kc-formula-box{color:#7dd3fc;border-color:#0ea5e9;}
+
+.kc5{border-color:#0284c7;}
+.kc5 .kc-top{background:linear-gradient(135deg,#071a28,#0369a1);}
+.kc5 .kc-num{background:#075985;color:#7dd3fc;}
+.kc5 .kc-name{color:#7dd3fc;}
+.kc5 .kc-formula-box{color:#bae6fd;border-color:#0284c7;}
+
+.kc6{border-color:#f59e0b;}
+.kc6 .kc-top{background:linear-gradient(135deg,#1c0f00,#78350f);}
+.kc6 .kc-num{background:#92400e;color:#fcd34d;}
+.kc6 .kc-name{color:#fcd34d;}
+.kc6 .kc-formula-box{color:#fde68a;border-color:#f59e0b;}
+
+.kc7{border-color:#ef4444;}
+.kc7 .kc-top{background:linear-gradient(135deg,#1a0505,#7f1d1d);}
+.kc7 .kc-num{background:#991b1b;color:#fca5a5;}
+.kc7 .kc-name{color:#fca5a5;}
+.kc7 .kc-formula-box{color:#fecaca;border-color:#ef4444;}
+
+.kc8{border-color:#f97316;}
+.kc8 .kc-top{background:linear-gradient(135deg,#1a0900,#7c2d12);}
+.kc8 .kc-num{background:#9a3412;color:#fdba74;}
+.kc8 .kc-name{color:#fdba74;}
+.kc8 .kc-formula-box{color:#fed7aa;border-color:#f97316;}
+
+/* dim tag colors */
+.dt-temps{background:#312e8122;border-color:#6366f1;color:#a5b4fc;}
+.dt-produit{background:#312e8122;border-color:#818cf8;color:#c4b5fd;}
+.dt-machine{background:#0c4a6e22;border-color:#0ea5e9;color:#38bdf8;}
+.dt-client{background:#4c1d9522;border-color:#a78bfa;color:#ddd6fe;}
+.dt-fourn{background:#58187722;border-color:#c084fc;color:#e9d5ff;}
+.dt-statut{background:#3b076422;border-color:#7c3aed;color:#e9d5ff;}
+
+.divider{height:1px;background:linear-gradient(90deg,transparent,#1e293b,transparent);margin:4px 0;}
+</style>
+</head>
+<body>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('constellation')">🗂️ Modèle Constellation</div>
+  <div class="tab" onclick="showTab('kpis')">📊 KPIs par Axe d'Analyse</div>
+</div>
+
+<!-- ══════════════════════ CONSTELLATION ══════════════════════ -->
+<div class="section active" id="constellation">
+  <div class="page-title">
+    <h2>🗂️ Schéma Constellation BI — Complet & Vérifié</h2>
+    <p>6 Dimensions · 5 Tables de Faits · 8 KPIs · WAS / Microsoft Dynamics 365</p>
+  </div>
+
+  <div style="position:relative;" id="cst-wrapper">
+  <svg id="svg-overlay" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="mt" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,6 2.5,0 5" fill="#6366f1"/></marker>
+      <marker id="mp" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,6 2.5,0 5" fill="#818cf8"/></marker>
+      <marker id="mm" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,6 2.5,0 5" fill="#0ea5e9"/></marker>
+      <marker id="mc" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,6 2.5,0 5" fill="#a78bfa"/></marker>
+      <marker id="mf" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,6 2.5,0 5" fill="#c084fc"/></marker>
+      <marker id="ms" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,6 2.5,0 5" fill="#7c3aed"/></marker>
+    </defs>
+  </svg>
+
+  <div class="cst-layout" id="cst-layout">
+
+    <!-- LEFT -->
+    <div class="cst-left">
+      <div class="dim d-machine" id="cdim-machine">
+        <div class="dim-hd"><span class="dim-badge">Dimension</span><span class="dim-name">⚙️ DIM_Machine</span></div>
+        <div class="fl">
+          <div class="f"><span class="pk">PK</span><span class="fn">WorkCenterNo <span class="ft">NVARCHAR</span></span></div>
+          <div class="f"><span class="sp"></span><span class="fn">Nom <span class="ft">NVARCHAR</span></span></div>
+          <div class="f"><span class="sp"></span><span class="fn">Groupe <span class="ft">NVARCHAR</span></span></div>
+          <div class="f"><span class="sp"></span><span class="fn">Site <span class="ft">NVARCHAR</span></span></div>
+          <div class="f"><span class="sp"></span><span class="fn">CapaciteMinutes <span class="ft">DECIMAL</span></span></div>
+          <div class="f"><span class="sp"></span><span class="fn" style="color:#86efac;">CoutUnitaireHeure <span class="ft">DECIMAL</span><span class="kb" style="background:#14532d;color:#86efac;">KPI 3&8</span></span></div>
+        </div>
+        <div class="dim-src">DEV$Work Center · "Unit Cost per Hour"</div>
+      </div>
+
+      <div class="dim d-client" id="cdim-client">
+        <div class="dim-hd"><span class="dim-badge">Dimension</span><span class="dim-name">👤 DIM_Client</span></div>
+        <div class="fl">
+          <div class="f"><span class="pk">PK</span><span class="fn">ClientNo <span class="ft">NVARCHAR</span></span></div>
+          <div class="f"><span class="sp"></span><span class="fn">Nom <span class="ft">NVARCHAR</span></span></div>
+          <div class="f"><span class="sp"></span><span class="fn">Ville <span class="ft">NVARCHAR</span></span></div>
+          <div class="f"><span class="sp"></span><span class="fn">Pays <span class="ft">NVARCHAR</span></span></div>
+          <div class="f"><span class="sp"></span><span class="fn">GroupeClient <span class="ft">NVARCHAR</span></span></div>
+          <div class="f"><span class="sp"></span><span class="fn">Vendeur <span class="ft">NVARCHAR</span></span></div>
+        </div>
+        <div class="dim-src">DEV$Customer</div>
+      </div>
+
+      <div class="dim d-fourn" id="cdim-fourn">
+        <div class="dim-hd"><span class="dim-badge">Dimension</span><span class="dim-name">🏭 DIM_Fournisseur</span></div>
+        <div class="fl">
+          <div class="f"><span class="pk">PK</span><span class="fn">VendorNo <span class="ft">NVARCHAR</span></span></div>
+          <div class="f"><span class="sp"></span><span class="fn">Nom <span class="ft">NVARCHAR</span></span></div>
+          <div class="f"><span class="sp"></span><span class="fn">Pays <span class="ft">NVARCHAR</span></span></div>
+          <div class="f"><span class="sp"></span><span class="fn">GroupeFournisseur <span class="ft">NVARCHAR</span></span></div>
+          <div class="f"><span class="sp"></span><span class="fn" style="color:#fde68a;">DelaiLivraisonConvenu <span class="ft">INT</span><span class="kb" style="background:#78350f;color:#fde68a;">KPI 6</span></span></div>
+        </div>
+        <div class="dim-src">DEV$Vendor · "Lead Time Calculation"</div>
+      </div>
+
+      <div class="dim d-statut" id="cdim-statut">
+        <div class="dim-hd"><span class="dim-badge">Dimension</span><span class="dim-name">🔖 DIM_Statut</span></div>
+        <div class="fl">
+          <div class="f"><span class="pk">PK</span><span class="fn">StatutCode <span class="ft">INT</span></span></div>
+          <div class="f"><span class="sp"></span><span class="fn">Libelle <span class="ft">NVARCHAR</span></span></div>
+          <div class="f"><span class="sp"></span><span class="fn" style="color:#475569;">0 = Simulé · 1 = Planifié</span></div>
+          <div class="f"><span class="sp"></span><span class="fn" style="color:#475569;">2 = En cours · 3 = Terminé</span></div>
+        </div>
+        <div class="dim-src">DEV$Production Order · champ "Status"</div>
+      </div>
+    </div>
+
+    <!-- CENTER -->
+    <div class="cst-center">
+
+      <!-- Shared dims -->
+      <div class="shared-block">
+        <div class="shared-lbl">⭐ Dimensions partagées — présentes dans TOUS les faits</div>
+        <div class="shared-row">
+          <div class="shared-card" id="cdim-temps">
+            <div class="dim-hd"><span class="dim-badge" style="background:#312e81;color:#a5b4fc;">Partagée</span><span class="dim-name" style="color:#a5b4fc;">⏱️ DIM_Temps</span></div>
+            <div class="fl">
+              <div class="f"><span class="pk">PK</span><span class="fn">DateKey <span class="ft">DATE</span></span></div>
+              <div class="f"><span class="sp"></span><span class="fn">Jour · Mois · Trimestre <span class="ft">INT</span></span></div>
+              <div class="f"><span class="sp"></span><span class="fn">Annee · Semaine <span class="ft">INT</span></span></div>
+              <div class="f"><span class="sp"></span><span class="fn">JourSemaine <span class="ft">NVARCHAR</span></span></div>
+            </div>
+            <div class="dim-src">Générée programmatiquement</div>
+          </div>
+          <div class="shared-card" id="cdim-produit">
+            <div class="dim-hd"><span class="dim-badge" style="background:#312e81;color:#a5b4fc;">Partagée</span><span class="dim-name" style="color:#a5b4fc;">📦 DIM_Produit</span></div>
+            <div class="fl">
+              <div class="f"><span class="pk">PK</span><span class="fn">ItemNo <span class="ft">NVARCHAR</span></span></div>
+              <div class="f"><span class="sp"></span><span class="fn">Description · Categorie <span class="ft">NVARCHAR</span></span></div>
+              <div class="f"><span class="sp"></span><span class="fn">Groupe · UniteMesure <span class="ft">NVARCHAR</span></span></div>
+              <div class="f"><span class="sp"></span><span class="fn" style="color:#ddd6fe;">PrixUnitaireVente <span class="ft">DECIMAL</span><span class="kb" style="background:#4c1d95;color:#ddd6fe;">KPI 1</span></span></div>
+              <div class="f"><span class="sp"></span><span class="fn" style="color:#ddd6fe;">CoutStandard <span class="ft">DECIMAL</span><span class="kb" style="background:#4c1d95;color:#ddd6fe;">ref.</span></span></div>
+            </div>
+            <div class="dim-src">DEV$Item · "Unit Price" & "Unit Cost"</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FAIT_Production -->
+      <div class="fait f-prod" id="cfait-prod">
+        <div class="fait-hd"><span class="fait-badge">Table de Faits</span><span class="fait-name">🟢 FAIT_Production</span></div>
+        <div class="fait-grid">
+          <div>
+            <div class="s-title">Clés &amp; Mesures</div>
+            <div class="fl">
+              <div class="f"><span class="pk">PK</span><span class="fn">ProductionID</span></div>
+              <div class="f"><span class="fk">FK</span><span class="fn">DateKey → DIM_Temps</span></div>
+              <div class="f"><span class="fk">FK</span><span class="fn">ItemNo → DIM_Produit</span></div>
+              <div class="f"><span class="fk">FK</span><span class="fn">WorkCenterNo → DIM_Machine</span></div>
+              <div class="f"><span class="fk">FK</span><span class="fn">StatutCode → DIM_Statut</span></div>
+              <div class="f"><span class="m">M</span><span class="fn">QteProduiteOF <span class="ft">DECIMAL</span></span></div>
+              <div class="f"><span class="m">M</span><span class="fn" style="color:#86efac;">HeuresCapacite<span class="kb" style="background:#14532d;color:#86efac;">KPI 2&3</span></span></div>
+              <div class="f"><span class="m">M</span><span class="fn" style="color:#86efac;">CoutMatiere<span class="kb" style="background:#14532d;color:#86efac;">KPI 3</span></span></div>
+            </div>
+          </div>
+          <div>
+            <div class="s-title">KPIs</div>
+            <div class="kbox" style="background:#14532d15;border-color:#22c55e;">
+              <div class="ktitle" style="color:#4ade80;">⚙️ KPI 2 — Charge machine</div>
+              <code class="kform" style="color:#86efac;">SUM(HeuresCapacite)</code>
+            </div>
+            <div class="kbox" style="background:#14532d15;border-color:#22c55e;">
+              <div class="ktitle" style="color:#4ade80;">💰 KPI 3 — Coût production</div>
+              <code class="kform" style="color:#86efac;">SUM(CoutMatiere) + SUM(HeuresCapacite × Machine.CoutUnitaireHeure)</code>
+            </div>
+          </div>
+          <div class="fait-src">DEV$Prod_ Order Line · DEV$Capacity Ledger Entry · DEV$Production Order</div>
+        </div>
+        <div class="dim-tags">
+          <span class="dim-tag dt-t">⏱️ DIM_Temps</span>
+          <span class="dim-tag dt-p">📦 DIM_Produit</span>
+          <span class="dim-tag dt-m">⚙️ DIM_Machine</span>
+          <span class="dim-tag dt-s">🔖 DIM_Statut</span>
+        </div>
+      </div>
+
+      <!-- FAIT_Ventes -->
+      <div class="fait f-ventes" id="cfait-ventes">
+        <div class="fait-hd"><span class="fait-badge">Table de Faits</span><span class="fait-name">🟣 FAIT_Ventes</span></div>
+        <div class="fait-grid">
+          <div>
+            <div class="s-title">Clés &amp; Mesures</div>
+            <div class="fl">
+              <div class="f"><span class="pk">PK</span><span class="fn">VenteID</span></div>
+              <div class="f"><span class="fk">FK</span><span class="fn">DateKey → DIM_Temps</span></div>
+              <div class="f"><span class="fk">FK</span><span class="fn">ItemNo → DIM_Produit</span></div>
+              <div class="f"><span class="fk">FK</span><span class="fn">ClientNo → DIM_Client</span></div>
+              <div class="f"><span class="m">M</span><span class="fn" style="color:#ddd6fe;">QteVendue<span class="kb" style="background:#4c1d95;color:#ddd6fe;">KPI 1</span></span></div>
+              <div class="f"><span class="m">M</span><span class="fn">MontantHT <span class="ft">DECIMAL</span></span></div>
+              <div class="f"><span class="m">M</span><span class="fn">RemisePct <span class="ft">DECIMAL</span></span></div>
+              <div class="f"><span class="m">M</span><span class="fn">NombreFactures <span class="ft">INT</span></span></div>
+            </div>
+          </div>
+          <div>
+            <div class="s-title">KPIs</div>
+            <div class="kbox" style="background:#4c1d9515;border-color:#a78bfa;">
+              <div class="ktitle" style="color:#c4b5fd;">💶 KPI 1 — Chiffre d'Affaires</div>
+              <code class="kform" style="color:#ddd6fe;">SUM(QteVendue × Produit.PrixUnitaireVente)
+— ou — SUM(MontantHT)</code>
+            </div>
+          </div>
+          <div class="fait-src">DEV$Sales Invoice Header · DEV$Sales Invoice Line</div>
+        </div>
+        <div class="dim-tags">
+          <span class="dim-tag dt-t">⏱️ DIM_Temps</span>
+          <span class="dim-tag dt-p">📦 DIM_Produit</span>
+          <span class="dim-tag dt-c">👤 DIM_Client</span>
+        </div>
+      </div>
+
+      <!-- FAIT_Stock -->
+      <div class="fait f-stock" id="cfait-stock">
+        <div class="fait-hd"><span class="fait-badge">Table de Faits</span><span class="fait-name">🔵 FAIT_Stock</span></div>
+        <div class="fait-grid">
+          <div>
+            <div class="s-title">Clés &amp; Mesures</div>
+            <div class="fl">
+              <div class="f"><span class="pk">PK</span><span class="fn">StockID</span></div>
+              <div class="f"><span class="fk">FK</span><span class="fn">DateKey → DIM_Temps</span></div>
+              <div class="f"><span class="fk">FK</span><span class="fn">ItemNo → DIM_Produit</span></div>
+              <div class="f"><span class="m">M</span><span class="fn" style="color:#7dd3fc;">StockEntree<span class="kb" style="background:#0c4a6e;color:#7dd3fc;">KPI 4</span></span></div>
+              <div class="f"><span class="m">M</span><span class="fn" style="color:#7dd3fc;">StockSortie<span class="kb" style="background:#0c4a6e;color:#7dd3fc;">KPI 4&5</span></span></div>
+              <div class="f"><span class="m">M</span><span class="fn" style="color:#7dd3fc;">StockFinal<span class="kb" style="background:#0c4a6e;color:#7dd3fc;">KPI 5</span></span></div>
+              <div class="f"><span class="m">M</span><span class="fn">ValeurStock <span class="ft">DECIMAL</span></span></div>
+            </div>
+          </div>
+          <div>
+            <div class="s-title">KPIs</div>
+            <div class="kbox" style="background:#0c4a6e15;border-color:#0ea5e9;">
+              <div class="ktitle" style="color:#38bdf8;">📦 KPI 4 — Stock disponible</div>
+              <code class="kform" style="color:#7dd3fc;">SUM(StockEntree) - SUM(StockSortie)</code>
+            </div>
+            <div class="kbox" style="background:#0c4a6e15;border-color:#0ea5e9;">
+              <div class="ktitle" style="color:#38bdf8;">🔄 KPI 5 — Rotation stock</div>
+              <code class="kform" style="color:#7dd3fc;">SUM(StockSortie) / AVG(StockFinal)</code>
+            </div>
+          </div>
+          <div class="fait-src">DEV$Item Ledger Entry (Entry Type ≠ 6)</div>
+        </div>
+        <div class="dim-tags">
+          <span class="dim-tag dt-t">⏱️ DIM_Temps</span>
+          <span class="dim-tag dt-p">📦 DIM_Produit</span>
+        </div>
+      </div>
+
+      <!-- FAIT_Achats -->
+      <div class="fait f-achats" id="cfait-achats">
+        <div class="fait-hd"><span class="fait-badge">Table de Faits</span><span class="fait-name">🟡 FAIT_Achats</span></div>
+        <div class="fait-grid">
+          <div>
+            <div class="s-title">Clés &amp; Mesures</div>
+            <div class="fl">
+              <div class="f"><span class="pk">PK</span><span class="fn">AchatID</span></div>
+              <div class="f"><span class="fk">FK</span><span class="fn">DateKey → DIM_Temps</span></div>
+              <div class="f"><span class="fk">FK</span><span class="fn">ItemNo → DIM_Produit</span></div>
+              <div class="f"><span class="fk">FK</span><span class="fn">VendorNo → DIM_Fournisseur</span></div>
+              <div class="f"><span class="m">M</span><span class="fn" style="color:#fde68a;">QteCommandee<span class="kb" style="background:#78350f;color:#fde68a;">KPI 6</span></span></div>
+              <div class="f"><span class="m">M</span><span class="fn" style="color:#fde68a;">PrixUnitaireAchat<span class="kb" style="background:#78350f;color:#fde68a;">KPI 6</span></span></div>
+              <div class="f"><span class="m">M</span><span class="fn">MontantAchat <span class="ft">DECIMAL</span></span></div>
+              <div class="f"><span class="m">M</span><span class="fn" style="color:#fde68a;">DelaiLivraisonReel<span class="kb" style="background:#78350f;color:#fde68a;">KPI 6</span></span></div>
+              <div class="f"><span class="m">M</span><span class="fn">NombreCommandes <span class="ft">INT</span></span></div>
+            </div>
+          </div>
+          <div>
+            <div class="s-title">KPIs</div>
+            <div class="kbox" style="background:#78350f15;border-color:#f59e0b;">
+              <div class="ktitle" style="color:#fcd34d;">🛒 KPI 6a — Montant achats</div>
+              <code class="kform" style="color:#fde68a;">SUM(QteCommandee × PrixUnitaireAchat)</code>
+            </div>
+            <div class="kbox" style="background:#78350f15;border-color:#f59e0b;">
+              <div class="ktitle" style="color:#fcd34d;">⏱ KPI 6b — Retard livraison</div>
+              <code class="kform" style="color:#fde68a;">AVG(DelaiLivraisonReel - Fourn.DelaiLivraisonConvenu)</code>
+            </div>
+          </div>
+          <div class="fait-src">DEV$Purchase Header · DEV$Purchase Line</div>
+        </div>
+        <div class="dim-tags">
+          <span class="dim-tag dt-t">⏱️ DIM_Temps</span>
+          <span class="dim-tag dt-p">📦 DIM_Produit</span>
+          <span class="dim-tag dt-f">🏭 DIM_Fournisseur</span>
+        </div>
+      </div>
+
+      <!-- FAIT_Qualite -->
+      <div class="fait f-qualite" id="cfait-qualite">
+        <div class="fait-hd"><span class="fait-badge">Table de Faits</span><span class="fait-name">🔴 FAIT_Qualite</span></div>
+        <div class="fait-grid">
+          <div>
+            <div class="s-title">Clés &amp; Mesures</div>
+            <div class="fl">
+              <div class="f"><span class="pk">PK</span><span class="fn">QualiteID</span></div>
+              <div class="f"><span class="fk">FK</span><span class="fn">DateKey → DIM_Temps</span></div>
+              <div class="f"><span class="fk">FK</span><span class="fn">ItemNo → DIM_Produit</span></div>
+              <div class="f"><span class="fk">FK</span><span class="fn">WorkCenterNo → DIM_Machine</span></div>
+              <div class="f"><span class="m">M</span><span class="fn" style="color:#fecaca;">QteDefectueuse<span class="kb" style="background:#7f1d1d;color:#fca5a5;">KPI 7</span></span></div>
+              <div class="f"><span class="m">M</span><span class="fn" style="color:#fecaca;">QteProduiteTotal<span class="kb" style="background:#7f1d1d;color:#fca5a5;">KPI 7</span></span></div>
+              <div class="f"><span class="m">M</span><span class="fn" style="color:#fed7aa;">HeuresTravaillees<span class="kb" style="background:#9a3412;color:#fdba74;">KPI 8</span></span></div>
+              <div class="f"><span class="m">M</span><span class="fn" style="color:#fed7aa;">CAGenere<span class="kb" style="background:#9a3412;color:#fdba74;">KPI 8</span></span></div>
+            </div>
+          </div>
+          <div>
+            <div class="s-title">KPIs</div>
+            <div class="kbox" style="background:#7f1d1d15;border-color:#ef4444;">
+              <div class="ktitle" style="color:#fca5a5;">⚠️ KPI 7 — Taux défauts</div>
+              <code class="kform" style="color:#fecaca;">SUM(QteDefectueuse) / SUM(QteProduiteTotal) × 100</code>
+            </div>
+            <div class="kbox" style="background:#7f1d1d15;border-color:#ef4444;">
+              <div class="ktitle" style="color:#fdba74;">💡 KPI 8 — Rentabilité machine</div>
+              <code class="kform" style="color:#fed7aa;">SUM(CAGenere) / (SUM(HeuresTravaillees) × Machine.CoutUnitaireHeure)</code>
+            </div>
+          </div>
+          <div class="fait-src">DEV$Item Ledger Entry (Type=6) · DEV$Capacity Ledger Entry · DEV$Work Center</div>
+        </div>
+        <div class="dim-tags">
+          <span class="dim-tag dt-t">⏱️ DIM_Temps</span>
+          <span class="dim-tag dt-p">📦 DIM_Produit</span>
+          <span class="dim-tag dt-m">⚙️ DIM_Machine</span>
+        </div>
+      </div>
+
+    </div><!-- end center -->
+
+    <!-- RIGHT — légende -->
+    <div class="cst-right">
+      <div style="background:#0d1117;border:1.5px solid #1e293b;border-radius:12px;padding:14px;font-size:.68rem;position:sticky;top:60px;">
+        <div style="font-weight:700;color:#f1f5f9;margin-bottom:12px;font-size:.72rem;">📌 KPIs par Table</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:.64rem;color:#94a3b8;line-height:1.6;">
+          <div><span style="color:#4ade80;font-weight:700;">🟢 Production</span><br>KPI 2 Charge · KPI 3 Coût</div>
+          <div class="divider"></div>
+          <div><span style="color:#c4b5fd;font-weight:700;">🟣 Ventes</span><br>KPI 1 CA</div>
+          <div class="divider"></div>
+          <div><span style="color:#38bdf8;font-weight:700;">🔵 Stock</span><br>KPI 4 Dispo · KPI 5 Rotation</div>
+          <div class="divider"></div>
+          <div><span style="color:#fcd34d;font-weight:700;">🟡 Achats</span><br>KPI 6 Montant + Délai</div>
+          <div class="divider"></div>
+          <div><span style="color:#fca5a5;font-weight:700;">🔴 Qualité</span><br>KPI 7 Défauts · KPI 8 Rentabilité</div>
+        </div>
+        <div style="margin-top:14px;border-top:1px solid #1e293b;padding-top:12px;">
+          <div style="font-weight:700;color:#475569;margin-bottom:8px;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;">Légende</div>
+          <div style="display:flex;flex-direction:column;gap:5px;font-size:.63rem;">
+            <div style="display:flex;gap:7px;align-items:center;"><span class="pk">PK</span><span style="color:#94a3b8;">Clé primaire</span></div>
+            <div style="display:flex;gap:7px;align-items:center;"><span class="fk">FK</span><span style="color:#94a3b8;">Clé étrangère</span></div>
+            <div style="display:flex;gap:7px;align-items:center;"><span class="m">M</span><span style="color:#94a3b8;">Mesure / fait</span></div>
+          </div>
+        </div>
+        <div style="margin-top:12px;border-top:1px solid #1e293b;padding-top:10px;">
+          <div style="font-weight:700;color:#475569;margin-bottom:8px;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;">Liaisons</div>
+          <div style="display:flex;flex-direction:column;gap:5px;font-size:.62rem;">
+            <div style="display:flex;align-items:center;gap:6px;"><div style="width:22px;height:2px;background:#6366f1;border-radius:2px;"></div><span style="color:#a5b4fc;">DIM_Temps</span></div>
+            <div style="display:flex;align-items:center;gap:6px;"><div style="width:22px;border-top:2px dashed #818cf8;"></div><span style="color:#a5b4fc;">DIM_Produit</span></div>
+            <div style="display:flex;align-items:center;gap:6px;"><div style="width:22px;height:2px;background:#0ea5e9;border-radius:2px;"></div><span style="color:#38bdf8;">DIM_Machine</span></div>
+            <div style="display:flex;align-items:center;gap:6px;"><div style="width:22px;height:2px;background:#a78bfa;border-radius:2px;"></div><span style="color:#c4b5fd;">DIM_Client</span></div>
+            <div style="display:flex;align-items:center;gap:6px;"><div style="width:22px;height:2px;background:#c084fc;border-radius:2px;"></div><span style="color:#e9d5ff;">DIM_Fournisseur</span></div>
+            <div style="display:flex;align-items:center;gap:6px;"><div style="width:22px;height:2px;background:#7c3aed;border-radius:2px;"></div><span style="color:#e9d5ff;">DIM_Statut</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end cst-layout -->
+  </div><!-- end cst-wrapper -->
+</div>
+
+<!-- ══════════════════════ KPIs ══════════════════════ -->
+<div class="section" id="kpis">
+  <div class="page-title">
+    <h2>📊 8 KPIs — Expliqués selon chaque Axe d'Analyse</h2>
+    <p>Pour chaque axe : ce qu'on voit · exemple concret · graphique recommandé</p>
+  </div>
+
+  <div class="kpi-list">
+
+    <!-- KPI 1 -->
+    <div class="kpi-card kc1">
+      <div class="kc-top">
+        <div class="kc-num">1</div>
+        <div class="kc-meta">
+          <div class="kc-domain">Domaine : Ventes · Table : FAIT_Ventes</div>
+          <div class="kc-name">💶 Chiffre d'Affaires (CA)</div>
+        </div>
+      </div>
+      <div class="kc-formula">
+        <div class="kc-formula-lbl">Formule</div>
+        <div class="kc-formula-box">CA = SUM( QteVendue  ×  PrixUnitaireVente )</div>
+        <div class="kc-formula-expl">→ Pour chaque ligne de vente, on multiplie la quantité vendue par le prix du produit. Puis on additionne tout.<br>Exemple : 10 chaises × 50€ + 5 tables × 200€ = 500 + 1000 = <b>1 500€ de CA</b></div>
+      </div>
+      <div class="kc-axes">
+        <div class="kc-axes-lbl">Analyse par axe</div>
+        <div class="axes-grid">
+          <div class="axe-card">
+            <div class="axe-top"><span class="axe-dim-tag dt-temps">⏱️ Par Temps</span><span class="axe-graph-tag">📈 Courbe</span></div>
+            <div class="axe-question">Est-ce que mon CA augmente ou baisse ?</div>
+            <div class="axe-example">Exemple : <b>"Le CA de mars = 50 000€ contre 40 000€ en février → +25%"</b><br>On voit la tendance mois par mois et on détecte les baisses avant qu'elles empirent.</div>
+          </div>
+          <div class="axe-card">
+            <div class="axe-top"><span class="axe-dim-tag dt-produit">📦 Par Produit</span><span class="axe-graph-tag">📊 Barres horizontales</span></div>
+            <div class="axe-question">Quels produits rapportent le plus ?</div>
+            <div class="axe-example">Exemple : <b>"Produit A = 30 000€, Produit B = 5 000€"</b><br>On sait sur quels produits concentrer les efforts commerciaux.</div>
+          </div>
+          <div class="axe-card">
+            <div class="axe-top"><span class="axe-dim-tag dt-client">👤 Par Client</span><span class="axe-graph-tag">🥧 Camembert</span></div>
+            <div class="axe-question">Quels clients achètent le plus ?</div>
+            <div class="axe-example">Exemple : <b>"Top 3 clients = 60% du CA total"</b><br>On identifie les clients stratégiques à fidéliser en priorité.</div>
+          </div>
+          <div class="axe-card">
+            <div class="axe-top"><span class="axe-dim-tag dt-temps">⏱️ Temps</span><span style="font-size:.55rem;color:#475569;margin:0 4px;">+</span><span class="axe-dim-tag dt-produit">📦 Produit</span><span class="axe-graph-tag">📉 Aires empilées</span></div>
+            <div class="axe-question">Quel produit monte, lequel baisse ?</div>
+            <div class="axe-example">Exemple : <b>"Produit A monte chaque mois. Produit C chute depuis mars"</b><br>On voit les tendances par produit dans le temps en un seul graphique.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI 2 -->
+    <div class="kpi-card kc2">
+      <div class="kc-top">
+        <div class="kc-num">2</div>
+        <div class="kc-meta">
+          <div class="kc-domain">Domaine : Production · Table : FAIT_Production</div>
+          <div class="kc-name">⚙️ Charge Machine (heures utilisées)</div>
+        </div>
+      </div>
+      <div class="kc-formula">
+        <div class="kc-formula-lbl">Formule</div>
+        <div class="kc-formula-box">Charge = SUM( HeuresCapacite )</div>
+        <div class="kc-formula-expl">→ On additionne toutes les heures où la machine a travaillé.<br>Exemple : Lundi 8h + Mardi 6h + Mercredi 7h = <b>21 heures de charge ce mois</b></div>
+      </div>
+      <div class="kc-axes">
+        <div class="kc-axes-lbl">Analyse par axe</div>
+        <div class="axes-grid">
+          <div class="axe-card">
+            <div class="axe-top"><span class="axe-dim-tag dt-machine">⚙️ Par Machine</span><span class="axe-graph-tag">📊 Barres</span></div>
+            <div class="axe-question">Quelle machine travaille le plus ? Laquelle est inactive ?</div>
+            <div class="axe-example">Exemple : <b>"Machine A = 180h, Machine B = 40h"</b><br>Machine B est sous-utilisée → peut-on lui donner plus de travail ou la réduire ?</div>
+          </div>
+          <div class="axe-card">
+            <div class="axe-top"><span class="axe-dim-tag dt-temps">⏱️ Par Temps</span><span class="axe-graph-tag">📈 Courbe</span></div>
+            <div class="axe-question">Y a-t-il des périodes de surcharge ou de sous-charge ?</div>
+            <div class="axe-example">Exemple : <b>"Janvier = 200h (surcharge), Juillet = 80h (période creuse)"</b><br>On planifie mieux la production et les maintenances.</div>
+          </div>
+          <div class="axe-card">
+            <div class="axe-top"><span class="axe-dim-tag dt-produit">📦 Par Produit</span><span class="axe-graph-tag">📊 Barres horiz.</span></div>
+            <div class="axe-question">Quel produit consomme le plus d'heures machine ?</div>
+            <div class="axe-example">Exemple : <b>"Produit X nécessite 3× plus d'heures que Produit Y"</b><br>Utile pour estimer le temps de fabrication d'une commande future.</div>
+          </div>
+          <div class="axe-card">
+            <div class="axe-top"><span class="axe-dim-tag dt-statut">🔖 Par Statut</span><span class="axe-graph-tag">🥧 Camembert</span></div>
+            <div class="axe-question">Combien d'heures sont en cours vs terminées ?</div>
+            <div class="axe-example">Exemple : <b>"60h planifiées, 120h en cours, 200h terminées"</b><br>On voit la répartition du travail selon l'état des ordres de fabrication.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI 3 -->
+    <div class="kpi-card kc3">
+      <div class="kc-top">
+        <div class="kc-num">3</div>
+        <div class="kc-meta">
+          <div class="kc-domain">Domaine : Production · Table : FAIT_Production + DIM_Machine</div>
+          <div class="kc-name">💰 Coût de Production</div>
+        </div>
+      </div>
+      <div class="kc-formula">
+        <div class="kc-formula-lbl">Formule</div>
+        <div class="kc-formula-box">Coût = SUM(CoutMatiere)  +  SUM(HeuresCapacite × CoutUnitaireHeure)</div>
+        <div class="kc-formula-expl">→ Coût total = ce qu'on a dépensé en matières + ce que la machine a coûté à faire tourner.<br>Exemple : Bois + vis = <b>800€</b> + Machine 40h × 5€/h = <b>200€</b> → Total = <b>1 000€ pour fabriquer ce mois</b></div>
+      </div>
+      <div class="kc-axes">
+        <div class="kc-axes-lbl">Analyse par axe</div>
+        <div class="axes-grid">
+          <div class="axe-card">
+            <div class="axe-top"><span class="axe-dim-tag dt-produit">📦 Par Produit</span><span class="axe-graph-tag">📊 Barres horiz.</span></div>
+            <div class="axe-question">Quel produit est le plus coûteux à fabriquer ?</div>
+            <div class="axe-example">Exemple : <b>"Produit A coûte 45€/unité, Produit B 8€/unité"</b><br>On compare avec le prix de vente → est-ce qu'on gagne de l'argent sur chaque produit ?</div>
+          </div>
+          <div class="axe-card">
+            <div class="axe-top"><span class="axe-dim-tag dt-machine">⚙️ Par Machine</span><span class="axe-graph-tag">📊 Barres groupées</span></div>
+            <div class="axe-question">Quelle machine coûte le plus cher ?</div>
+            <div class="axe-example">Exemple : <b>"Machine A coûte 500€/mois en heures, Machine B 1 200€/mois"</b><br>Machine B coûte 2× plus → justifie-t-elle cet écart en production ?</div>
+          </div>
+          <div class="axe-card">
+            <div class="axe-top"><span class="axe-dim-tag dt-temps">⏱️ Par Temps</span><span class="axe-graph-tag">📈 Courbe</span></div>
+            <div class="axe-question">Les coûts augmentent-ils ou baissent-ils ?</div>
+            <div class="axe-example">Exemple : <b>"Le coût a baissé de 15% depuis qu'on a optimisé la machine en février"</b><br>On mesure l'impact des améliorations sur les coûts réels.</div>
+          </div>
+          <div class="axe-card">
+            <div class="axe-top"><span class="axe-dim-tag dt-statut">🔖 Par Statut</span><span class="axe-graph-tag">🥧 Camembert</span></div>
+            <div class="axe-question">Combien ont coûté les ordres terminés ce mois ?</div>
+            <div class="axe-example">Exemple : <b>"Ordres terminés = 8 000€, Ordres en cours = 3 000€ (coût estimé)"</b><br>On sépare ce qui est réel (terminé) de ce qui est encore en cours.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI 4 -->
+    <div class="kpi-card kc4">
+      <div class="kc-top">
+        <div class="kc-num">4</div>
+        <div class="kc-meta">
+          <div class="kc-domain">Domaine : Stock · Table : FAIT_Stock</div>
+          <div class="kc-name">📦 Stock Disponible</div>
+        </div>
+      </div>
+      <div class="kc-formula">
+        <div class="kc-formula-lbl">Formule</div>
+        <div class="kc-formula-box">Stock Dispo = SUM(StockEntree)  −  SUM(StockSortie)</div>
+        <div class="kc-formula-expl">→ Comme un compte bancaire : ce qui entre moins ce qui sort = ce qui reste.<br>Exemple : 300 chaises reçues − 250 chaises livrées = <b>50 chaises restantes en entrepôt</b></div>
+      </div>
+      <div class="kc-axes">
+        <div class="kc-axes-lbl">Analyse par axe</div>
+        <div class="axes-grid">
+          <div class="axe-card">
+            <div class="axe-top"><span class="axe-dim-tag dt-produit">📦 Par Produit</span><span class="axe-graph-tag">📊 Barres horiz.</span></div>
+            <div class="axe-question">Quel produit est en rupture ? Lequel est en excédent ?</div>
+            <div class="axe-example">Exemple : <b>"Produit A = 500 unités ✅, Produit B = 0 → RUPTURE ❌"</b><br>On déclenche immédiatement un réapprovisionnement pour le Produit B.</div>
+          </div>
+          <div class="axe-card">
+            <div class="axe-top"><span class="axe-dim-tag dt-temps">⏱️ Par Temps</span><span class="axe-graph-tag">📉 Aire (évolution)</span></div>
+            <div class="axe-question">Le stock monte ou descend dans le temps ?</div>
+            <div class="axe-example">Exemple : <b>"Le stock baisse de 100 unités par mois → rupture dans 5 mois"</b><br>On anticipe et commande avant d'être en rupture.</div>
+          </div>
+          <div class="axe-card">
+            <div class="axe-top"><span class="axe-dim-tag dt-temps">⏱️ Temps</span><span style="font-size:.55rem;color:#475569;margin:0 4px;">+</span><span class="axe-dim-tag dt-produit">📦 Produit</span><span class="axe-graph-tag">📊 Tableau de bord</span></div>
+            <div class="axe-question">Quel produit s'épuise le plus vite ?</div>
+            <div class="axe-example">Exemple : <b>"Produit A perd 50 unités/mois, Produit C perd 200 unités/mois"</b><br>On priorise le réapprovisionnement du Produit C en urgence.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI 5 -->
+    <div class="kpi-card kc5">
+      <div class="kc-top">
+        <div class="kc-num">5</div>
+        <div class="kc-meta">
+          <div class="kc-domain">Domaine : Stock · Table : FAIT_Stock</div>
+          <div class="kc-name">🔄 Rotation du Stock</div>
+        </div>
+      </div>
+      <div class="kc-formula">
+        <div class="kc-formula-lbl">Formule</div>
+        <div class="kc-formula-box">Rotation = SUM(StockSortie)  /  AVG(StockFinal)
+🟢 Rotation élevée = produits qui se vendent vite
+🔴 Rotation faible  = produits qui "dorment" en entrepôt</div>
+        <div class="kc-formula-expl">→ On divise ce qui est sorti par le stock moyen.<br>Exemple : 200 chaises sorties ÷ stock moyen de 100 = <b>rotation = 2</b> (le stock s'est renouvelé 2 fois ce mois)</div>
+      </div>
+      <div class="kc-axes">
+        <div class="kc-axes-lbl">Analyse par axe</div>
+        <div class="axes-grid">
+          <div class="axe-card">
+            <div class="axe-top"><span class="axe-dim-tag dt-produit">📦 Par Produit</span><span class="axe-graph-tag">📊 Barres horiz.</span></div>
+            <div class="axe-question">Quels produits tournent bien ? Lesquels prennent la poussière ?</div>
+            <div class="axe-example">Exemple : <b>"Produit A rotation = 8 ✅ excellent, Produit B rotation = 0.3 ❌"</b><br>Produit B immobilise de l'argent inutilement → réduire les commandes ou faire une promo.</div>
+          </div>
+          <div class="axe-card">
+            <div class="axe-top"><span class="axe-dim-tag dt-temps">⏱️ Par Temps</span><span class="axe-graph-tag">📈 Courbe</span></div>
+            <div class="axe-question">La rotation s'améliore ou se dégrade ?</div>
+            <div class="axe-example">Exemple : <b>"Rotation = 5 en janvier, 3 en mars, 1.5 en mai → les ventes ralentissent"</b><br>Signal d'alarme : les produits se vendent de moins en moins vite.</div>
+          </div>
+          <div class="axe-card">
+            <div class="axe-top"><span class="axe-dim-tag dt-temps">⏱️ Temps</span><span style="font-size:.55rem;color:#475569;margin:0 4px;">+</span><span class="axe-dim-tag dt-produit">📦 Produit</span><span class="axe-graph-tag">📈 Multi-courbes</span></div>
+            <div class="axe-question">Comparer la rotation de plusieurs produits dans le temps</div>
+            <div class="axe-example">Exemple : <b>"Produit A reste stable à 6. Produit C chute de 4 à 0.5 en 3 mois"</b><br>Produit C a un problème de vente → investigation nécessaire.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI 6 -->
+    <div class="kpi-card kc6">
+      <div class="kc-top">
+        <div class="kc-num">6</div>
+        <div class="kc-meta">
+          <div class="kc-domain">Domaine : Achats · Table : FAIT_Achats + DIM_Fournisseur</div>
+          <div class="kc-name">🛒 Montant Achats + Délai Livraison</div>
+        </div>
+      </div>
+      <div class="kc-formula">
+        <div class="kc-formula-lbl">Formule</div>
+        <div class="kc-formula-box">Montant = SUM( QteCommandee × PrixUnitaireAchat )
+Retard  = AVG( DelaiLivraisonReel − DelaiLivraisonConvenu )</div>
+        <div class="kc-formula-expl">→ Montant : on multiplie quantité commandée × prix, puis on additionne toutes les commandes.<br>→ Retard : on compare la date réelle de livraison avec la date promise par le fournisseur.<br>Exemple : devait livrer en 5 jours, a livré en 8 jours → <b>+3 jours de retard</b></div>
+      </div>
+      <div class="kc-axes">
+        <div class="kc-axes-lbl">Analyse par axe</div>
+        <div class="axes-grid">
+          <div class="axe-card">
+            <div class="axe-top"><span class="axe-dim-tag dt-fourn">🏭 Par Fournisseur</span><span class="axe-graph-tag">📊 Barres + points</span></div>
+            <div class="axe-question">Quel fournisseur coûte le plus ? Lequel est en retard ?</div>
+            <div class="axe-example">Exemple : <b>"Fournisseur A = 40 000€ d'achat mais +6 jours de retard moyen ❌"</b><br>On évalue si ce fournisseur vaut la peine ou s'il faut en trouver un autre.</div>
+          </div>
+          <div class="axe-card">
+            <div class="axe-top"><span class="axe-dim-tag dt-temps">⏱️ Par Temps</span><span class="axe-graph-tag">📈 Courbe</span></div>
+            <div class="axe-question">Quand dépense-t-on le plus en achats ?</div>
+            <div class="axe-example">Exemple : <b>"Budget achats = 80 000€ en janvier (préparation stock), 20 000€ en juillet"</b><br>On planifie la trésorerie : savoir quand les grosses dépenses arrivent.</div>
+          </div>
+          <div class="axe-card">
+            <div class="axe-top"><span class="axe-dim-tag dt-produit">📦 Par Produit</span><span class="axe-graph-tag">🥧 Camembert</span></div>
+            <div class="axe-question">Quelle matière coûte le plus cher à acheter ?</div>
+            <div class="axe-example">Exemple : <b>"Matière X = 35% du budget achat total"</b><br>Si cette matière augmente de prix, c'est toute la rentabilité qui est impactée → surveiller de près.</div>
+          </div>
+          <div class="axe-card">
+            <div class="axe-top"><span class="axe-dim-tag dt-fourn">🏭 Fournisseur</span><span style="font-size:.55rem;color:#475569;margin:0 4px;">+</span><span class="axe-dim-tag dt-temps">⏱️ Temps</span><span class="axe-graph-tag">📈 Multi-courbes</span></div>
+            <div class="axe-question">Un fournisseur se dégrade-t-il dans le temps ?</div>
+            <div class="axe-example">Exemple : <b>"Fournisseur B : 1 jour de retard en jan → 5 jours en avril"</b><br>Sa fiabilité se dégrade → négocier ou changer avant que ça impacte la production.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI 7 -->
+    <div class="kpi-card kc7">
+      <div class="kc-top">
+        <div class="kc-num">7</div>
+        <div class="kc-meta">
+          <div class="kc-domain">Domaine : Qualité · Table : FAIT_Qualite</div>
+          <div class="kc-name">⚠️ Taux de Produits Défectueux</div>
+        </div>
+      </div>
+      <div class="kc-formula">
+        <div class="kc-formula-lbl">Formule</div>
+        <div class="kc-formula-box">Taux = SUM(QteDefectueuse)  /  SUM(QteProduiteTotal)  ×  100
+🟢 Objectif : taux &lt; 2%    🔴 Alarme : taux &gt; 5%</div>
+        <div class="kc-formula-expl">→ On divise le nombre de pièces ratées par le nombre total fabriqué, multiplié par 100 pour avoir un %.<br>Exemple : 25 chaises défectueuses ÷ 500 fabriquées × 100 = <b>5% de taux de défauts</b></div>
+      </div>
+      <div class="kc-axes">
+        <div class="kc-axes-lbl">Analyse par axe</div>
+        <div class="axes-grid">
+          <div class="axe-card">
+            <div class="axe-top"><span class="axe-dim-tag dt-machine">⚙️ Par Machine</span><span class="axe-graph-tag">📊 Barres + seuil</span></div>
+            <div class="axe-question">Quelle machine produit le plus de défauts ?</div>
+            <div class="axe-example">Exemple : <b>"Machine C = 8% de défauts ❌ → mal réglée ou usée"</b><br>On planifie la maintenance ou le remplacement de Machine C en urgence.</div>
+          </div>
+          <div class="axe-card">
+            <div class="axe-top"><span class="axe-dim-tag dt-produit">📦 Par Produit</span><span class="axe-graph-tag">📊 Barres horiz.</span></div>
+            <div class="axe-question">Quel produit est difficile à fabriquer sans défaut ?</div>
+            <div class="axe-example">Exemple : <b>"Produit X = 12% de défauts → processus de fabrication trop complexe"</b><br>On revoir le processus ou on forme mieux les opérateurs pour ce produit.</div>
+          </div>
+          <div class="axe-card">
+            <div class="axe-top"><span class="axe-dim-tag dt-temps">⏱️ Par Temps</span><span class="axe-graph-tag">📈 Courbe + objectif</span></div>
+            <div class="axe-question">La qualité s'améliore-t-elle après une action corrective ?</div>
+            <div class="axe-example">Exemple : <b>"8% en janvier → 4% en février → 1.5% en mars (après formation)"</b><br>On mesure l'efficacité des actions de correction entreprises.</div>
+          </div>
+          <div class="axe-card">
+            <div class="axe-top"><span class="axe-dim-tag dt-machine">⚙️ Machine</span><span style="font-size:.55rem;color:#475569;margin:0 4px;">+</span><span class="axe-dim-tag dt-temps">⏱️ Temps</span><span class="axe-graph-tag">📈 Multi-courbes</span></div>
+            <div class="axe-question">Machine C s'est-elle améliorée après maintenance ?</div>
+            <div class="axe-example">Exemple : <b>"Machine C : 8% en jan → 2% en mars après réparation ✅"</b><br>On prouve que la maintenance a bien fonctionné avec des chiffres réels.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI 8 -->
+    <div class="kpi-card kc8">
+      <div class="kc-top">
+        <div class="kc-num">8</div>
+        <div class="kc-meta">
+          <div class="kc-domain">Domaine : Qualité / Rentabilité · Table : FAIT_Qualite + DIM_Machine</div>
+          <div class="kc-name">💡 Rentabilité Machine</div>
+        </div>
+      </div>
+      <div class="kc-formula">
+        <div class="kc-formula-lbl">Formule</div>
+        <div class="kc-formula-box">Rentabilité = SUM(CAGenere)  /  ( SUM(HeuresTravaillees) × CoutUnitaireHeure )
+🟢 Résultat &gt; 1 → Machine RENTABLE ✅
+🔴 Résultat &lt; 1 → Machine coûte plus qu'elle ne rapporte ❌</div>
+        <div class="kc-formula-expl">→ On compare l'argent que la machine a rapporté avec ce qu'elle a coûté à faire tourner.<br>Exemple : Machine A a généré <b>2 000€</b> de CA, elle a coûté 40h × 5€ = <b>200€</b> → Rentabilité = 2000 ÷ 200 = <b>10 ✅</b></div>
+      </div>
+      <div class="kc-axes">
+        <div class="kc-axes-lbl">Analyse par axe</div>
+        <div class="axes-grid">
+          <div class="axe-card">
+            <div class="axe-top"><span class="axe-dim-tag dt-machine">⚙️ Par Machine</span><span class="axe-graph-tag">📊 Barres + ligne 1</span></div>
+            <div class="axe-question">Quelle machine est rentable ? Laquelle coûte trop cher ?</div>
+            <div class="axe-example">Exemple : <b>"Machine A = 4.2 ✅ · Machine B = 0.7 ❌"</b><br>Machine B coûte plus qu'elle ne rapporte → décision : réparer, remplacer ou arrêter.</div>
+          </div>
+          <div class="axe-card">
+            <div class="axe-top"><span class="axe-dim-tag dt-temps">⏱️ Par Temps</span><span class="axe-graph-tag">📈 Courbe</span></div>
+            <div class="axe-question">Une machine devient-elle moins rentable avec le temps ?</div>
+            <div class="axe-example">Exemple : <b>"Machine A : rentabilité = 5 en jan → 2 en mars → 0.8 en mai"</b><br>Elle vieillit et coûte de plus en plus en maintenance → prévoir son remplacement.</div>
+          </div>
+          <div class="axe-card">
+            <div class="axe-top"><span class="axe-dim-tag dt-produit">📦 Par Produit</span><span class="axe-graph-tag">📊 Barres horiz.</span></div>
+            <div class="axe-question">La machine est-elle rentable pour tous les produits qu'elle fabrique ?</div>
+            <div class="axe-example">Exemple : <b>"Machine A est rentable (×5) pour Produit X mais pas rentable (×0.6) pour Produit Y"</b><br>On affecte la machine uniquement aux produits où elle est vraiment rentable.</div>
+          </div>
+          <div class="axe-card">
+            <div class="axe-top"><span class="axe-dim-tag dt-machine">⚙️ Machine</span><span style="font-size:.55rem;color:#475569;margin:0 4px;">+</span><span class="axe-dim-tag dt-temps">⏱️ Temps</span><span class="axe-graph-tag">🎯 Radar / Jauge</span></div>
+            <div class="axe-question">Vue globale de la rentabilité de toutes les machines</div>
+            <div class="axe-example">Exemple : <b>"Vue radar : Machine A au top, Machine B en zone rouge, Machine C en amélioration"</b><br>Un seul graphique pour voir d'un coup d'œil l'état de tout le parc machine.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end kpi-list -->
+</div>
+
+<script>
+function showTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+  event.target.classList.add('active');
+  if(name==='constellation') setTimeout(drawLines,100);
+}
+
+function drawLines(){
+  const svg=document.getElementById('svg-overlay');
+  const wrap=document.getElementById('cst-wrapper');
+  if(!svg||!wrap)return;
+  svg.innerHTML=svg.innerHTML.replace(/<path[^>]*>/g,'');
+  svg.setAttribute('width',wrap.scrollWidth);
+  svg.setAttribute('height',wrap.scrollHeight);
+  const wr=wrap.getBoundingClientRect();
+  function R(id){
+    const e=document.getElementById(id);
+    if(!e)return null;
+    const r=e.getBoundingClientRect();
+    return{cx:r.left-wr.left+r.width/2,cy:r.top-wr.top+r.height/2,
+      left:r.left-wr.left,right:r.right-wr.left,top:r.top-wr.top,bottom:r.bottom-wr.top};
+  }
+  function L(x1,y1,x2,y2,col,dash,mk){
+    const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+    const mx=(x1+x2)/2;
+    p.setAttribute('d',`M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`);
+    p.setAttribute('stroke',col);p.setAttribute('stroke-width','1.8');
+    p.setAttribute('fill','none');p.setAttribute('opacity','0.65');
+    if(dash)p.setAttribute('stroke-dasharray','5,3');
+    if(mk)p.setAttribute('marker-end',`url(#${mk})`);
+    svg.appendChild(p);
+  }
+  const T=R('cdim-temps'),P=R('cdim-produit');
+  const M=R('cdim-machine'),C=R('cdim-client'),F=R('cdim-fourn'),S=R('cdim-statut');
+  const FP=R('cfait-prod'),FV=R('cfait-ventes'),FS=R('cfait-stock'),FA=R('cfait-achats'),FQ=R('cfait-qualite');
+  if(!T||!FP)return;
+  [FP,FV,FS,FA,FQ].forEach(f=>L(T.cx,T.bottom,f.left,f.cy,'#6366f1',false,'mt'));
+  [FP,FV,FS,FA,FQ].forEach((f,i)=>L(P.cx,P.bottom,f.left+14,f.cy,'#818cf8',true,'mp'));
+  L(M.right,M.cy,    FP.left,FP.cy,    '#0ea5e9',false,'mm');
+  L(M.right,M.cy+12, FQ.left,FQ.cy,    '#0ea5e9',false,'mm');
+  L(C.right,C.cy,    FV.left,FV.cy,    '#a78bfa',false,'mc');
+  L(F.right,F.cy,    FA.left,FA.cy,    '#c084fc',false,'mf');
+  L(S.right,S.cy,    FP.left,FP.cy+16,'#7c3aed',false,'ms');
+}
+window.addEventListener('load',()=>setTimeout(drawLines,200));
+window.addEventListener('resize',drawLines);
+</script>
+</body>
+</html>

@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<title>Constellation BI — VERSION FINALE</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#070b14; font-family:'Segoe UI',sans-serif; padding:28px; color:#e2e8f0; min-width:1300px; }
+
+.header { text-align:center; margin-bottom:32px; }
+.header h1 { font-size:1.5rem; font-weight:700; color:#f1f5f9; margin-bottom:6px; }
+.header p  { font-size:0.75rem; color:#475569; letter-spacing:0.12em; text-transform:uppercase; }
+
+.layout-wrapper { position:relative; }
+.layout { display:grid; grid-template-columns:220px 1fr 220px; gap:16px; max-width:1260px; margin:0 auto; align-items:start; }
+.col-left,.col-right { display:flex; flex-direction:column; gap:12px; }
+.col-center { display:flex; flex-direction:column; gap:12px; }
+
+/* DIMS */
+.dim { border-radius:12px; padding:12px 14px; border:1.5px solid; font-size:0.75rem; }
+.dim-header { display:flex; align-items:center; gap:7px; margin-bottom:8px; }
+.dim-badge { font-size:0.52rem; font-weight:700; letter-spacing:0.1em; padding:2px 6px; border-radius:5px; text-transform:uppercase; }
+.dim-name  { font-size:0.85rem; font-weight:700; }
+.dim-source { margin-top:7px; padding-top:5px; border-top:1px solid rgba(255,255,255,0.06); font-size:0.58rem; opacity:0.5; font-style:italic; }
+.fl { display:flex; flex-direction:column; gap:2px; }
+.f  { display:flex; align-items:flex-start; gap:5px; padding:2px 0; }
+.pk { background:#fbbf2422; border-radius:4px; padding:1px 5px; color:#fbbf24; font-size:0.58rem; font-weight:700; min-width:22px; text-align:center; flex-shrink:0; }
+.fk { background:#60a5fa22; border-radius:4px; padding:1px 5px; color:#60a5fa; font-size:0.58rem; font-weight:700; min-width:22px; text-align:center; flex-shrink:0; }
+.m  { background:#4ade8022; border-radius:4px; padding:1px 5px; color:#4ade80; font-size:0.58rem; font-weight:700; min-width:22px; text-align:center; flex-shrink:0; }
+.sp { min-width:22px; flex-shrink:0; }
+.fn { color:#cbd5e1; font-size:0.68rem; line-height:1.4; }
+.ft { color:#475569; font-size:0.58rem; margin-left:3px; }
+.kbadge { font-size:0.5rem; padding:1px 4px; border-radius:3px; margin-left:3px; font-weight:700; }
+
+.d-machine { background:#0f1e30; border-color:#0ea5e9; }
+.d-machine .dim-badge { background:#0c4a6e; color:#38bdf8; }
+.d-machine .dim-name  { color:#38bdf8; }
+.d-client  { background:#1a1030; border-color:#a78bfa; }
+.d-client .dim-badge  { background:#4c1d95; color:#c4b5fd; }
+.d-client .dim-name   { color:#c4b5fd; }
+.d-fourn   { background:#1a1030; border-color:#c084fc; }
+.d-fourn .dim-badge   { background:#4c1d95; color:#c4b5fd; }
+.d-fourn .dim-name    { color:#c4b5fd; }
+.d-statut  { background:#1a1030; border-color:#7c3aed; }
+.d-statut .dim-badge  { background:#581c87; color:#e9d5ff; }
+.d-statut .dim-name   { color:#e9d5ff; }
+
+.shared-block { background:#10102a; border:2px solid #6366f1; border-radius:14px; padding:14px; }
+.shared-label { text-align:center; font-size:0.6rem; color:#818cf8; font-weight:700; letter-spacing:0.15em; text-transform:uppercase; margin-bottom:10px; }
+.shared-row   { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.shared-card  { background:#1e1b4b; border:1px solid #4338ca; border-radius:10px; padding:10px 12px; }
+
+/* FAITS */
+.fait { border-radius:14px; padding:14px 16px; border:2px solid; }
+.fait-header { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+.fait-badge  { font-size:0.52rem; font-weight:700; letter-spacing:0.1em; padding:2px 7px; border-radius:5px; text-transform:uppercase; }
+.fait-name   { font-size:0.92rem; font-weight:700; }
+.fait-grid   { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.sect-title  { font-size:0.58rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; opacity:0.5; margin-bottom:5px; }
+.fait-src    { grid-column:1/-1; margin-top:7px; padding-top:5px; border-top:1px solid rgba(255,255,255,0.06); font-size:0.58rem; opacity:0.4; font-style:italic; }
+
+/* KPI BOX */
+.kbox { border-radius:8px; padding:8px 10px; margin-bottom:6px; border-left:3px solid; }
+.ktitle { font-size:0.68rem; font-weight:700; margin-bottom:5px; }
+.krow   { font-size:0.62rem; color:#94a3b8; margin-bottom:2px; line-height:1.4; }
+.kform  { font-family:monospace; font-size:0.63rem; background:rgba(0,0,0,0.4); padding:4px 7px; border-radius:5px; display:block; margin-top:4px; white-space:pre-wrap; line-height:1.5; }
+
+/* DIMENSION TAGS sous chaque fait */
+.dim-tags { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.08); }
+.dim-tag  { display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:7px; font-size:0.62rem; font-weight:700; border:1px solid; }
+.dt-temps   { background:#1a1a35; border-color:#6366f1; color:#a5b4fc; }
+.dt-produit { background:#1a1a35; border-color:#818cf8; color:#c4b5fd; }
+.dt-machine { background:#0f1e30; border-color:#0ea5e9; color:#38bdf8; }
+.dt-client  { background:#1a1030; border-color:#a78bfa; color:#c4b5fd; }
+.dt-fourn   { background:#1a1030; border-color:#c084fc; color:#e9d5ff; }
+.dt-statut  { background:#1a1030; border-color:#7c3aed; color:#e9d5ff; }
+
+/* FAIT THEMES */
+.f-prod    { background:#061a0e; border-color:#22c55e; }
+.f-prod .fait-badge  { background:#14532d; color:#4ade80; }
+.f-prod .fait-name   { color:#4ade80; }
+.f-ventes  { background:#120a2a; border-color:#a78bfa; }
+.f-ventes .fait-badge{ background:#4c1d95; color:#c4b5fd; }
+.f-ventes .fait-name { color:#c4b5fd; }
+.f-stock   { background:#061626; border-color:#0ea5e9; }
+.f-stock .fait-badge { background:#0c4a6e; color:#38bdf8; }
+.f-stock .fait-name  { color:#38bdf8; }
+.f-achats  { background:#1a100a; border-color:#f59e0b; }
+.f-achats .fait-badge{ background:#78350f; color:#fcd34d; }
+.f-achats .fait-name { color:#fcd34d; }
+.f-qualite { background:#1a0a0a; border-color:#ef4444; }
+.f-qualite .fait-badge{ background:#7f1d1d; color:#fca5a5; }
+.f-qualite .fait-name { color:#fca5a5; }
+
+/* SVG */
+#svg-lines { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:10; }
+
+.divider { height:1px; background:linear-gradient(90deg,transparent,#1e293b,transparent); margin:6px 0; }
+
+/* RECAP TABLE */
+.recap { max-width:1260px; margin:32px auto 0; background:#0d1117; border:1.5px solid #1e293b; border-radius:14px; padding:20px; overflow-x:auto; }
+.recap h2 { text-align:center; font-size:0.82rem; color:#f1f5f9; font-weight:700; margin-bottom:18px; letter-spacing:0.1em; text-transform:uppercase; }
+table { width:100%; border-collapse:collapse; font-size:0.72rem; }
+th { padding:9px 12px; text-align:center; background:#0f172a; color:#475569; font-size:0.63rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; border-bottom:2px solid #1e293b; }
+th:first-child { text-align:left; min-width:160px; }
+td { padding:8px 12px; text-align:center; border-bottom:1px solid #0f172a; color:#94a3b8; vertical-align:middle; }
+td:first-child { text-align:left; font-weight:600; }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:rgba(255,255,255,0.02); }
+.ok  { color:#4ade80; font-weight:700; font-size:0.8rem; }
+.no  { color:#1e293b; font-size:0.8rem; }
+.th-t  { color:#a5b4fc !important; }
+.th-p  { color:#a5b4fc !important; }
+.th-m  { color:#38bdf8 !important; }
+.th-c  { color:#c4b5fd !important; }
+.th-f  { color:#e9d5ff !important; }
+.th-s  { color:#e9d5ff !important; }
+
+.legend { display:flex; justify-content:center; flex-wrap:wrap; gap:18px; margin-top:22px; padding:14px; background:#0d1117; border-radius:10px; max-width:1260px; margin-left:auto; margin-right:auto; }
+.legend-item { display:flex; align-items:center; gap:7px; font-size:0.7rem; color:#64748b; }
+.ldot { width:10px; height:10px; border-radius:3px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🗂️ Schéma Constellation BI — VERSION FINALE VÉRIFIÉE</h1>
+  <p>WAS · 8 KPIs · 6 Dimensions · 5 Tables de Faits · Microsoft Dynamics 365 Business Central</p>
+</div>
+
+<div class="layout-wrapper">
+<svg id="svg-lines" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="m-t" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#6366f1"/></marker>
+    <marker id="m-p" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#818cf8"/></marker>
+    <marker id="m-m" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#0ea5e9"/></marker>
+    <marker id="m-c" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#a78bfa"/></marker>
+    <marker id="m-f" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#c084fc"/></marker>
+    <marker id="m-s" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#7c3aed"/></marker>
+  </defs>
+</svg>
+
+<div class="layout">
+
+<!-- ══════ COLONNE GAUCHE ══════ -->
+<div class="col-left">
+
+  <div class="dim d-machine" id="dim-machine">
+    <div class="dim-header"><span class="dim-badge">Dimension</span><span class="dim-name">⚙️ DIM_Machine</span></div>
+    <div class="fl">
+      <div class="f"><span class="pk">PK</span><span class="fn">WorkCenterNo <span class="ft">NVARCHAR</span></span></div>
+      <div class="f"><span class="sp"></span><span class="fn">Nom <span class="ft">NVARCHAR</span></span></div>
+      <div class="f"><span class="sp"></span><span class="fn">Groupe <span class="ft">NVARCHAR</span></span></div>
+      <div class="f"><span class="sp"></span><span class="fn">Site <span class="ft">NVARCHAR</span></span></div>
+      <div class="f"><span class="sp"></span><span class="fn">CapaciteMinutes <span class="ft">DECIMAL</span></span></div>
+      <div class="f"><span class="sp"></span><span class="fn" style="color:#86efac;">CoutUnitaireHeure <span class="ft">DECIMAL</span> <span class="kbadge" style="background:#14532d;color:#86efac;">KPI 3 & 8</span></span></div>
+    </div>
+    <div class="dim-source">Source : DEV$Work Center · "Unit Cost per Hour"</div>
+  </div>
+
+  <div class="dim d-client" id="dim-client">
+    <div class="dim-header"><span class="dim-badge">Dimension</span><span class="dim-name">👤 DIM_Client</span></div>
+    <div class="fl">
+      <div class="f"><span class="pk">PK</span><span class="fn">ClientNo <span class="ft">NVARCHAR</span></span></div>
+      <div class="f"><span class="sp"></span><span class="fn">Nom <span class="ft">NVARCHAR</span></span></div>
+      <div class="f"><span class="sp"></span><span class="fn">Ville <span class="ft">NVARCHAR</span></span></div>
+      <div class="f"><span class="sp"></span><span class="fn">Pays <span class="ft">NVARCHAR</span></span></div>
+      <div class="f"><span class="sp"></span><span class="fn">GroupeClient <span class="ft">NVARCHAR</span></span></div>
+      <div class="f"><span class="sp"></span><span class="fn">Vendeur <span class="ft">NVARCHAR</span></span></div>
+    </div>
+    <div class="dim-source">Source : DEV$Customer</div>
+  </div>
+
+  <div class="dim d-fourn" id="dim-fourn">
+    <div class="dim-header"><span class="dim-badge">Dimension</span><span class="dim-name">🏭 DIM_Fournisseur</span></div>
+    <div class="fl">
+      <div class="f"><span class="pk">PK</span><span class="fn">VendorNo <span class="ft">NVARCHAR</span></span></div>
+      <div class="f"><span class="sp"></span><span class="fn">Nom <span class="ft">NVARCHAR</span></span></div>
+      <div class="f"><span class="sp"></span><span class="fn">Pays <span class="ft">NVARCHAR</span></span></div>
+      <div class="f"><span class="sp"></span><span class="fn">GroupeFournisseur <span class="ft">NVARCHAR</span></span></div>
+      <div class="f"><span class="sp"></span><span class="fn" style="color:#fde68a;">DelaiLivraisonConvenu <span class="ft">INT jours</span> <span class="kbadge" style="background:#78350f;color:#fde68a;">KPI 6</span></span></div>
+    </div>
+    <div class="dim-source">Source : DEV$Vendor · "Lead Time Calculation"</div>
+  </div>
+
+  <div class="dim d-statut" id="dim-statut">
+    <div class="dim-header"><span class="dim-badge">Dimension</span><span class="dim-name">🔖 DIM_Statut</span></div>
+    <div class="fl">
+      <div class="f"><span class="pk">PK</span><span class="fn">StatutCode <span class="ft">INT</span></span></div>
+      <div class="f"><span class="sp"></span><span class="fn">Libelle <span class="ft">NVARCHAR</span></span></div>
+      <div class="f"><span class="sp"></span><span class="fn" style="color:#475569;">0 = Simulé</span></div>
+      <div class="f"><span class="sp"></span><span class="fn" style="color:#475569;">1 = Planifié</span></div>
+      <div class="f"><span class="sp"></span><span class="fn" style="color:#475569;">2 = En cours</span></div>
+      <div class="f"><span class="sp"></span><span class="fn" style="color:#475569;">3 = Terminé</span></div>
+    </div>
+    <div class="dim-source">Source : DEV$Production Order · champ "Status"</div>
+  </div>
+
+</div>
+
+<!-- ══════ COLONNE CENTRE ══════ -->
+<div class="col-center">
+
+  <div class="shared-block">
+    <div class="shared-label">⭐ Dimensions partagées — présentes dans TOUS les faits</div>
+    <div class="shared-row">
+
+      <div class="shared-card" id="dim-temps">
+        <div class="dim-header">
+          <span class="dim-badge" style="background:#312e81;color:#a5b4fc;">Partagée</span>
+          <span class="dim-name" style="color:#a5b4fc;">⏱️ DIM_Temps</span>
+        </div>
+        <div class="fl">
+          <div class="f"><span class="pk">PK</span><span class="fn">DateKey <span class="ft">DATE</span></span></div>
+          <div class="f"><span class="sp"></span><span class="fn">Jour <span class="ft">INT</span></span></div>
+          <div class="f"><span class="sp"></span><span class="fn">Mois <span class="ft">INT</span></span></div>
+          <div class="f"><span class="sp"></span><span class="fn">Trimestre <span class="ft">INT</span></span></div>
+          <div class="f"><span class="sp"></span><span class="fn">Annee <span class="ft">INT</span></span></div>
+          <div class="f"><span class="sp"></span><span class="fn">Semaine <span class="ft">INT</span></span></div>
+          <div class="f"><span class="sp"></span><span class="fn">JourSemaine <span class="ft">NVARCHAR</span></span></div>
+        </div>
+        <div class="dim-source">Générée programmatiquement</div>
+      </div>
+
+      <div class="shared-card" id="dim-produit">
+        <div class="dim-header">
+          <span class="dim-badge" style="background:#312e81;color:#a5b4fc;">Partagée</span>
+          <span class="dim-name" style="color:#a5b4fc;">📦 DIM_Produit</span>
+        </div>
+        <div class="fl">
+          <div class="f"><span class="pk">PK</span><span class="fn">ItemNo <span class="ft">NVARCHAR</span></span></div>
+          <div class="f"><span class="sp"></span><span class="fn">Description <span class="ft">NVARCHAR</span></span></div>
+          <div class="f"><span class="sp"></span><span class="fn">Categorie <span class="ft">NVARCHAR</span></span></div>
+          <div class="f"><span class="sp"></span><span class="fn">Groupe <span class="ft">NVARCHAR</span></span></div>
+          <div class="f"><span class="sp"></span><span class="fn">UniteMesure <span class="ft">NVARCHAR</span></span></div>
+          <div class="f"><span class="sp"></span><span class="fn" style="color:#ddd6fe;">PrixUnitaireVente <span class="ft">DECIMAL</span> <span class="kbadge" style="background:#4c1d95;color:#ddd6fe;">KPI 1</span></span></div>
+          <div class="f"><span class="sp"></span><span class="fn" style="color:#ddd6fe;">CoutStandard <span class="ft">DECIMAL</span> <span class="kbadge" style="background:#4c1d95;color:#ddd6fe;">référence</span></span></div>
+        </div>
+        <div class="dim-source">Source : DEV$Item · "Unit Price" & "Unit Cost"</div>
+      </div>
+
+    </div>
+  </div>
+  <div class="divider"></div>
+
+  <!-- ── FAIT_Production ── -->
+  <div class="fait f-prod" id="fait-prod">
+    <div class="fait-header"><span class="fait-badge">Table de Faits</span><span class="fait-name">🟢 FAIT_Production</span></div>
+    <div class="fait-grid">
+      <div>
+        <div class="sect-title">Clés & Mesures</div>
+        <div class="fl">
+          <div class="f"><span class="pk">PK</span><span class="fn">ProductionID</span></div>
+          <div class="f"><span class="fk">FK</span><span class="fn">DateKey → DIM_Temps</span></div>
+          <div class="f"><span class="fk">FK</span><span class="fn">ItemNo → DIM_Produit</span></div>
+          <div class="f"><span class="fk">FK</span><span class="fn">WorkCenterNo → DIM_Machine</span></div>
+          <div class="f"><span class="fk">FK</span><span class="fn">StatutCode → DIM_Statut</span></div>
+          <div class="f"><span class="m">M</span><span class="fn">QteProduiteOF <span class="ft">DECIMAL</span></span></div>
+          <div class="f"><span class="m">M</span><span class="fn" style="color:#86efac;">HeuresCapacite <span class="ft">DECIMAL</span> <span class="kbadge" style="background:#14532d;color:#86efac;">KPI 2&3</span></span></div>
+          <div class="f"><span class="m">M</span><span class="fn" style="color:#86efac;">CoutMatiere <span class="ft">DECIMAL</span> <span class="kbadge" style="background:#14532d;color:#86efac;">KPI 3</span></span></div>
+        </div>
+      </div>
+      <div>
+        <div class="sect-title">KPIs</div>
+        <div class="kbox" style="background:#14532d18;border-color:#22c55e;">
+          <div class="ktitle" style="color:#4ade80;">⚙️ KPI 2 — Charge machine</div>
+          <div class="krow">• <b>HeuresCapacite</b> → FAIT_Production</div>
+          <code class="kform" style="color:#86efac;">SUM(HeuresCapacite)</code>
+        </div>
+        <div class="kbox" style="background:#14532d18;border-color:#22c55e;">
+          <div class="ktitle" style="color:#4ade80;">💰 KPI 3 — Coût de production</div>
+          <div class="krow">• <b>CoutMatiere</b> → FAIT_Production</div>
+          <div class="krow">• <b>HeuresCapacite</b> → FAIT_Production</div>
+          <div class="krow">• <b>CoutUnitaireHeure</b> → DIM_Machine</div>
+          <code class="kform" style="color:#86efac;">SUM(CoutMatiere) + SUM(HeuresCapacite × DIM_Machine.CoutUnitaireHeure)</code>
+        </div>
+      </div>
+    </div>
+    <div class="fait-src">Source : DEV$Prod_ Order Line · DEV$Capacity Ledger Entry · DEV$Production Order</div>
+    <div class="dim-tags">
+      <span class="dim-tag dt-temps">⏱️ DIM_Temps</span>
+      <span class="dim-tag dt-produit">📦 DIM_Produit</span>
+      <span class="dim-tag dt-machine">⚙️ DIM_Machine</span>
+      <span class="dim-tag dt-statut">🔖 DIM_Statut</span>
+    </div>
+  </div>
+
+  <!-- ── FAIT_Ventes ── -->
+  <div class="fait f-ventes" id="fait-ventes">
+    <div class="fait-header"><span class="fait-badge">Table de Faits</span><span class="fait-name">🟣 FAIT_Ventes</span></div>
+    <div class="fait-grid">
+      <div>
+        <div class="sect-title">Clés & Mesures</div>
+        <div class="fl">
+          <div class="f"><span class="pk">PK</span><span class="fn">VenteID</span></div>
+          <div class="f"><span class="fk">FK</span><span class="fn">DateKey → DIM_Temps</span></div>
+          <div class="f"><span class="fk">FK</span><span class="fn">ItemNo → DIM_Produit</span></div>
+          <div class="f"><span class="fk">FK</span><span class="fn">ClientNo → DIM_Client</span></div>
+          <div class="f"><span class="m">M</span><span class="fn" style="color:#ddd6fe;">QteVendue <span class="ft">DECIMAL</span> <span class="kbadge" style="background:#4c1d95;color:#ddd6fe;">KPI 1</span></span></div>
+          <div class="f"><span class="m">M</span><span class="fn">MontantHT <span class="ft">DECIMAL</span></span></div>
+          <div class="f"><span class="m">M</span><span class="fn">RemisePct <span class="ft">DECIMAL</span></span></div>
+          <div class="f"><span class="m">M</span><span class="fn">NombreFactures <span class="ft">INT</span></span></div>
+        </div>
+      </div>
+      <div>
+        <div class="sect-title">KPIs</div>
+        <div class="kbox" style="background:#4c1d9518;border-color:#a78bfa;">
+          <div class="ktitle" style="color:#c4b5fd;">💶 KPI 1 — Chiffre d'Affaires</div>
+          <div class="krow">• <b>QteVendue</b> → FAIT_Ventes</div>
+          <div class="krow">• <b>PrixUnitaireVente</b> → DIM_Produit</div>
+          <code class="kform" style="color:#ddd6fe;">SUM(QteVendue × DIM_Produit.PrixUnitaireVente)
+— ou — SUM(MontantHT)</code>
+        </div>
+      </div>
+    </div>
+    <div class="fait-src">Source : DEV$Sales Invoice Header · DEV$Sales Invoice Line</div>
+    <div class="dim-tags">
+      <span class="dim-tag dt-temps">⏱️ DIM_Temps</span>
+      <span class="dim-tag dt-produit">📦 DIM_Produit</span>
+      <span class="dim-tag dt-client">👤 DIM_Client</span>
+    </div>
+  </div>
+
+  <!-- ── FAIT_Stock ── -->
+  <div class="fait f-stock" id="fait-stock">
+    <div class="fait-header"><span class="fait-badge">Table de Faits</span><span class="fait-name">🔵 FAIT_Stock</span></div>
+    <div class="fait-grid">
+      <div>
+        <div class="sect-title">Clés & Mesures</div>
+        <div class="fl">
+          <div class="f"><span class="pk">PK</span><span class="fn">StockID</span></div>
+          <div class="f"><span class="fk">FK</span><span class="fn">DateKey → DIM_Temps</span></div>
+          <div class="f"><span class="fk">FK</span><span class="fn">ItemNo → DIM_Produit</span></div>
+          <div class="f"><span class="m">M</span><span class="fn" style="color:#7dd3fc;">StockEntree <span class="ft">DECIMAL</span> <span class="kbadge" style="background:#0c4a6e;color:#7dd3fc;">KPI 4</span></span></div>
+          <div class="f"><span class="m">M</span><span class="fn" style="color:#7dd3fc;">StockSortie <span class="ft">DECIMAL</span> <span class="kbadge" style="background:#0c4a6e;color:#7dd3fc;">KPI 4&5</span></span></div>
+          <div class="f"><span class="m">M</span><span class="fn" style="color:#7dd3fc;">StockFinal <span class="ft">DECIMAL</span> <span class="kbadge" style="background:#0c4a6e;color:#7dd3fc;">KPI 5</span></span></div>
+          <div class="f"><span class="m">M</span><span class="fn">ValeurStock <span class="ft">DECIMAL</span></span></div>
+        </div>
+      </div>
+      <div>
+        <div class="sect-title">KPIs</div>
+        <div class="kbox" style="background:#0c4a6e18;border-color:#0ea5e9;">
+          <div class="ktitle" style="color:#38bdf8;">📦 KPI 4 — Stock disponible</div>
+          <div class="krow">• <b>StockEntree</b> → FAIT_Stock</div>
+          <div class="krow">• <b>StockSortie</b> → FAIT_Stock</div>
+          <code class="kform" style="color:#7dd3fc;">SUM(StockEntree) - SUM(StockSortie)</code>
+        </div>
+        <div class="kbox" style="background:#0c4a6e18;border-color:#0ea5e9;">
+          <div class="ktitle" style="color:#38bdf8;">🔄 KPI 5 — Rotation du stock</div>
+          <div class="krow">• <b>StockSortie</b> → FAIT_Stock</div>
+          <div class="krow">• <b>StockFinal</b> → FAIT_Stock</div>
+          <code class="kform" style="color:#7dd3fc;">SUM(StockSortie) / AVG(StockFinal)</code>
+        </div>
+      </div>
+    </div>
+    <div class="fait-src">Source : DEV$Item Ledger Entry (Entry Type ≠ 6)</div>
+    <div class="dim-tags">
+      <span class="dim-tag dt-temps">⏱️ DIM_Temps</span>
+      <span class="dim-tag dt-produit">📦 DIM_Produit</span>
+    </div>
+  </div>
+
+  <!-- ── FAIT_Achats ── -->
+  <div class="fait f-achats" id="fait-achats">
+    <div class="fait-header"><span class="fait-badge">Table de Faits</span><span class="fait-name">🟡 FAIT_Achats</span></div>
+    <div class="fait-grid">
+      <div>
+        <div class="sect-title">Clés & Mesures</div>
+        <div class="fl">
+          <div class="f"><span class="pk">PK</span><span class="fn">AchatID</span></div>
+          <div class="f"><span class="fk">FK</span><span class="fn">DateKey → DIM_Temps</span></div>
+          <div class="f"><span class="fk">FK</span><span class="fn">ItemNo → DIM_Produit</span></div>
+          <div class="f"><span class="fk">FK</span><span class="fn">VendorNo → DIM_Fournisseur</span></div>
+          <div class="f"><span class="m">M</span><span class="fn" style="color:#fde68a;">QteCommandee <span class="ft">DECIMAL</span> <span class="kbadge" style="background:#78350f;color:#fde68a;">KPI 6</span></span></div>
+          <div class="f"><span class="m">M</span><span class="fn" style="color:#fde68a;">PrixUnitaireAchat <span class="ft">DECIMAL</span> <span class="kbadge" style="background:#78350f;color:#fde68a;">KPI 6</span></span></div>
+          <div class="f"><span class="m">M</span><span class="fn">MontantAchat <span class="ft">DECIMAL</span></span></div>
+          <div class="f"><span class="m">M</span><span class="fn" style="color:#fde68a;">DelaiLivraisonReel <span class="ft">INT jours</span> <span class="kbadge" style="background:#78350f;color:#fde68a;">KPI 6</span></span></div>
+          <div class="f"><span class="m">M</span><span class="fn">NombreCommandes <span class="ft">INT</span></span></div>
+        </div>
+      </div>
+      <div>
+        <div class="sect-title">KPIs</div>
+        <div class="kbox" style="background:#78350f18;border-color:#f59e0b;">
+          <div class="ktitle" style="color:#fcd34d;">🛒 KPI 6 — Montant achats</div>
+          <div class="krow">• <b>QteCommandee</b> → FAIT_Achats</div>
+          <div class="krow">• <b>PrixUnitaireAchat</b> → FAIT_Achats</div>
+          <code class="kform" style="color:#fde68a;">SUM(QteCommandee × PrixUnitaireAchat)</code>
+        </div>
+        <div class="kbox" style="background:#78350f18;border-color:#f59e0b;">
+          <div class="ktitle" style="color:#fcd34d;">⏱ KPI 6b — Retard livraison</div>
+          <div class="krow">• <b>DelaiLivraisonReel</b> → FAIT_Achats</div>
+          <div class="krow">• <b>DelaiLivraisonConvenu</b> → DIM_Fournisseur</div>
+          <code class="kform" style="color:#fde68a;">AVG(DelaiLivraisonReel - DIM_Fournisseur.DelaiLivraisonConvenu)</code>
+        </div>
+      </div>
+    </div>
+    <div class="fait-src">Source : DEV$Purchase Header · DEV$Purchase Line</div>
+    <div class="dim-tags">
+      <span class="dim-tag dt-temps">⏱️ DIM_Temps</span>
+      <span class="dim-tag dt-produit">📦 DIM_Produit</span>
+      <span class="dim-tag dt-fourn">🏭 DIM_Fournisseur</span>
+    </div>
+  </div>
+
+  <!-- ── FAIT_Qualite ── -->
+  <div class="fait f-qualite" id="fait-qualite">
+    <div class="fait-header"><span class="fait-badge">Table de Faits — NOUVEAU</span><span class="fait-name">🔴 FAIT_Qualite</span></div>
+    <div class="fait-grid">
+      <div>
+        <div class="sect-title">Clés & Mesures</div>
+        <div class="fl">
+          <div class="f"><span class="pk">PK</span><span class="fn">QualiteID</span></div>
+          <div class="f"><span class="fk">FK</span><span class="fn">DateKey → DIM_Temps</span></div>
+          <div class="f"><span class="fk">FK</span><span class="fn">ItemNo → DIM_Produit</span></div>
+          <div class="f"><span class="fk">FK</span><span class="fn">WorkCenterNo → DIM_Machine</span></div>
+          <div class="f"><span class="m">M</span><span class="fn" style="color:#fecaca;">QteDefectueuse <span class="ft">DECIMAL</span> <span class="kbadge" style="background:#7f1d1d;color:#fca5a5;">KPI 7</span></span></div>
+          <div class="f"><span class="m">M</span><span class="fn" style="color:#fecaca;">QteProduiteTotal <span class="ft">DECIMAL</span> <span class="kbadge" style="background:#7f1d1d;color:#fca5a5;">KPI 7</span></span></div>
+          <div class="f"><span class="m">M</span><span class="fn" style="color:#fbbf24;">HeuresTravaillees <span class="ft">DECIMAL</span> <span class="kbadge" style="background:#78350f;color:#fbbf24;">KPI 8</span></span></div>
+          <div class="f"><span class="m">M</span><span class="fn" style="color:#fbbf24;">CAGenere <span class="ft">DECIMAL</span> <span class="kbadge" style="background:#78350f;color:#fbbf24;">KPI 8</span></span></div>
+        </div>
+      </div>
+      <div>
+        <div class="sect-title">KPIs</div>
+        <div class="kbox" style="background:#7f1d1d18;border-color:#ef4444;">
+          <div class="ktitle" style="color:#fca5a5;">⚠️ KPI 7 — Taux défauts</div>
+          <div class="krow">• <b>QteDefectueuse</b> → FAIT_Qualite</div>
+          <div class="krow">• <b>QteProduiteTotal</b> → FAIT_Qualite</div>
+          <code class="kform" style="color:#fecaca;">SUM(QteDefectueuse) / SUM(QteProduiteTotal) × 100</code>
+        </div>
+        <div class="kbox" style="background:#7f1d1d18;border-color:#ef4444;">
+          <div class="ktitle" style="color:#fbbf24;">💡 KPI 8 — Rentabilité machine</div>
+          <div class="krow">• <b>CAGenere</b> → FAIT_Qualite</div>
+          <div class="krow">• <b>HeuresTravaillees</b> → FAIT_Qualite</div>
+          <div class="krow">• <b>CoutUnitaireHeure</b> → DIM_Machine</div>
+          <code class="kform" style="color:#fde68a;">SUM(CAGenere) / (SUM(HeuresTravaillees) × DIM_Machine.CoutUnitaireHeure)</code>
+        </div>
+      </div>
+    </div>
+    <div class="fait-src">Source : DEV$Item Ledger Entry (Type=6) · DEV$Capacity Ledger Entry · DEV$Work Center · DEV$Sales Invoice Line</div>
+    <div class="dim-tags">
+      <span class="dim-tag dt-temps">⏱️ DIM_Temps</span>
+      <span class="dim-tag dt-produit">📦 DIM_Produit</span>
+      <span class="dim-tag dt-machine">⚙️ DIM_Machine</span>
+    </div>
+  </div>
+
+</div><!-- fin col-center -->
+
+<!-- ══════ COLONNE DROITE ══════ -->
+<div class="col-right">
+
+  <div style="background:#0f172a;border:1.5px solid #334155;border-radius:12px;padding:14px;font-size:0.68rem;">
+    <div style="font-weight:700;color:#f1f5f9;margin-bottom:12px;font-size:0.75rem;">🗺️ Résumé rapide</div>
+    <div style="display:flex;flex-direction:column;gap:9px;color:#94a3b8;line-height:1.6;font-size:0.65rem;">
+      <div><span style="color:#c4b5fd;font-weight:700;">KPI 1 CA :</span><br>QteVendue (FAIT) × PrixUnitaireVente (DIM_Produit)</div>
+      <div class="divider"></div>
+      <div><span style="color:#4ade80;font-weight:700;">KPI 2 Charge :</span><br>HeuresCapacite (FAIT_Production)</div>
+      <div class="divider"></div>
+      <div><span style="color:#4ade80;font-weight:700;">KPI 3 Coût prod :</span><br>CoutMatiere (FAIT) + HeuresCapacite (FAIT) × CoutUnitaireHeure (DIM_Machine)</div>
+      <div class="divider"></div>
+      <div><span style="color:#38bdf8;font-weight:700;">KPI 4 Stock :</span><br>StockEntree − StockSortie (FAIT_Stock)</div>
+      <div class="divider"></div>
+      <div><span style="color:#38bdf8;font-weight:700;">KPI 5 Rotation :</span><br>StockSortie ÷ AVG(StockFinal) (FAIT_Stock)</div>
+      <div class="divider"></div>
+      <div><span style="color:#fcd34d;font-weight:700;">KPI 6 Achats :</span><br>QteCommandee × PrixUnitaireAchat (FAIT_Achats)<br>+ Retard vs DIM_Fournisseur</div>
+      <div class="divider"></div>
+      <div><span style="color:#fca5a5;font-weight:700;">KPI 7 Défauts :</span><br>QteDefectueuse ÷ QteProduiteTotal × 100 (FAIT_Qualite)</div>
+      <div class="divider"></div>
+      <div><span style="color:#fbbf24;font-weight:700;">KPI 8 Rentabilité :</span><br>CAGenere ÷ (HeuresTravaillees × DIM_Machine.CoutUnitaireHeure)</div>
+    </div>
+  </div>
+
+  <div style="background:#0d1117;border:1.5px solid #1e293b;border-radius:12px;padding:14px;font-size:0.68rem;">
+    <div style="font-weight:700;color:#475569;margin-bottom:10px;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;">Légende</div>
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="display:flex;align-items:center;gap:8px;"><span class="pk">PK</span><span style="color:#94a3b8;">Clé primaire</span></div>
+      <div style="display:flex;align-items:center;gap:8px;"><span class="fk">FK</span><span style="color:#94a3b8;">Clé étrangère</span></div>
+      <div style="display:flex;align-items:center;gap:8px;"><span class="m">M</span><span style="color:#94a3b8;">Mesure / fait</span></div>
+    </div>
+    <div class="divider" style="margin:10px 0;"></div>
+    <div style="font-size:0.65rem;font-weight:700;color:#475569;margin-bottom:8px;letter-spacing:0.1em;text-transform:uppercase;">Liaisons</div>
+    <div style="display:flex;flex-direction:column;gap:5px;font-size:0.64rem;">
+      <div style="display:flex;align-items:center;gap:7px;"><div style="width:26px;height:2px;background:#6366f1;border-radius:2px;"></div><span style="color:#a5b4fc;">DIM_Temps</span></div>
+      <div style="display:flex;align-items:center;gap:7px;"><div style="width:26px;border-top:2px dashed #818cf8;"></div><span style="color:#a5b4fc;">DIM_Produit</span></div>
+      <div style="display:flex;align-items:center;gap:7px;"><div style="width:26px;height:2px;background:#0ea5e9;border-radius:2px;"></div><span style="color:#38bdf8;">DIM_Machine</span></div>
+      <div style="display:flex;align-items:center;gap:7px;"><div style="width:26px;height:2px;background:#a78bfa;border-radius:2px;"></div><span style="color:#c4b5fd;">DIM_Client</span></div>
+      <div style="display:flex;align-items:center;gap:7px;"><div style="width:26px;height:2px;background:#c084fc;border-radius:2px;"></div><span style="color:#e9d5ff;">DIM_Fournisseur</span></div>
+      <div style="display:flex;align-items:center;gap:7px;"><div style="width:26px;height:2px;background:#7c3aed;border-radius:2px;"></div><span style="color:#e9d5ff;">DIM_Statut</span></div>
+    </div>
+  </div>
+
+</div>
+
+</div><!-- fin .layout -->
+</div><!-- fin .layout-wrapper -->
+
+<!-- ══════ TABLEAU RÉCAP KPI × AXES ══════ -->
+<div class="recap">
+  <h2>📊 Vérification — Chaque KPI par axe d'analyse</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>KPI</th>
+        <th class="th-t">⏱️ Par Temps<br><span style="font-size:0.55rem;opacity:0.6;">mois/trim/an</span></th>
+        <th class="th-p">📦 Par Produit<br><span style="font-size:0.55rem;opacity:0.6;">quel article</span></th>
+        <th class="th-m">⚙️ Par Machine<br><span style="font-size:0.55rem;opacity:0.6;">quel work center</span></th>
+        <th class="th-c">👤 Par Client<br><span style="font-size:0.55rem;opacity:0.6;">quel client</span></th>
+        <th class="th-f">🏭 Par Fournisseur<br><span style="font-size:0.55rem;opacity:0.6;">quel vendor</span></th>
+        <th class="th-s">🔖 Par Statut<br><span style="font-size:0.55rem;opacity:0.6;">état OF</span></th>
+        <th>Table de Faits</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="color:#c4b5fd;">💶 KPI 1 — Chiffre d'Affaires</td>
+        <td class="ok">✅</td><td class="ok">✅</td><td class="no">—</td>
+        <td class="ok">✅</td><td class="no">—</td><td class="no">—</td>
+        <td style="color:#c4b5fd;font-size:0.65rem;">FAIT_Ventes</td>
+      </tr>
+      <tr>
+        <td style="color:#4ade80;">⚙️ KPI 2 — Charge machine</td>
+        <td class="ok">✅</td><td class="ok">✅</td><td class="ok">✅</td>
+        <td class="no">—</td><td class="no">—</td><td class="ok">✅</td>
+        <td style="color:#4ade80;font-size:0.65rem;">FAIT_Production</td>
+      </tr>
+      <tr>
+        <td style="color:#4ade80;">💰 KPI 3 — Coût de production</td>
+        <td class="ok">✅</td><td class="ok">✅</td><td class="ok">✅</td>
+        <td class="no">—</td><td class="no">—</td><td class="ok">✅</td>
+        <td style="color:#4ade80;font-size:0.65rem;">FAIT_Production</td>
+      </tr>
+      <tr>
+        <td style="color:#38bdf8;">📦 KPI 4 — Stock disponible</td>
+        <td class="ok">✅</td><td class="ok">✅</td><td class="no">—</td>
+        <td class="no">—</td><td class="no">—</td><td class="no">—</td>
+        <td style="color:#38bdf8;font-size:0.65rem;">FAIT_Stock</td>
+      </tr>
+      <tr>
+        <td style="color:#38bdf8;">🔄 KPI 5 — Rotation du stock</td>
+        <td class="ok">✅</td><td class="ok">✅</td><td class="no">—</td>
+        <td class="no">—</td><td class="no">—</td><td class="no">—</td>
+        <td style="color:#38bdf8;font-size:0.65rem;">FAIT_Stock</td>
+      </tr>
+      <tr>
+        <td style="color:#fcd34d;">🛒 KPI 6 — Montant achats + délai</td>
+        <td class="ok">✅</td><td class="ok">✅</td><td class="no">—</td>
+        <td class="no">—</td><td class="ok">✅</td><td class="no">—</td>
+        <td style="color:#fcd34d;font-size:0.65rem;">FAIT_Achats</td>
+      </tr>
+      <tr>
+        <td style="color:#fca5a5;">⚠️ KPI 7 — Taux défauts</td>
+        <td class="ok">✅</td><td class="ok">✅</td><td class="ok">✅</td>
+        <td class="no">—</td><td class="no">—</td><td class="no">—</td>
+        <td style="color:#fca5a5;font-size:0.65rem;">FAIT_Qualite</td>
+      </tr>
+      <tr>
+        <td style="color:#fbbf24;">💡 KPI 8 — Rentabilité machine</td>
+        <td class="ok">✅</td><td class="ok">✅</td><td class="ok">✅</td>
+        <td class="no">—</td><td class="no">—</td><td class="no">—</td>
+        <td style="color:#fbbf24;font-size:0.65rem;">FAIT_Qualite</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Note vérification -->
+  <div style="margin-top:16px;padding:12px 16px;background:#0f172a;border-radius:10px;font-size:0.68rem;color:#94a3b8;line-height:1.8;">
+    <div style="color:#f1f5f9;font-weight:700;margin-bottom:8px;">✅ Vérification des axes — Tout est cohérent :</div>
+    <div>• <b style="color:#a5b4fc;">DIM_Temps</b> → présente dans <b>les 5 tables de faits</b> ✅ (tous les KPIs sont analysables par période)</div>
+    <div>• <b style="color:#a5b4fc;">DIM_Produit</b> → présente dans <b>les 5 tables de faits</b> ✅ (tous les KPIs sont analysables par produit)</div>
+    <div>• <b style="color:#38bdf8;">DIM_Machine</b> → présente dans <b>Production + Qualité</b> ✅ (KPI 2, 3, 7, 8 liés aux machines)</div>
+    <div>• <b style="color:#c4b5fd;">DIM_Client</b> → présente dans <b>Ventes seulement</b> ✅ (logique : le client achète, pas lié au stock/production)</div>
+    <div>• <b style="color:#e9d5ff;">DIM_Fournisseur</b> → présente dans <b>Achats seulement</b> ✅ (logique : le fournisseur livre, pas lié aux ventes)</div>
+    <div>• <b style="color:#e9d5ff;">DIM_Statut</b> → présente dans <b>Production seulement</b> ✅ (statut = état de l'ordre de fabrication : simulé/planifié/en cours/terminé)</div>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="ldot" style="background:#6366f1;"></div>DIM_Temps (partagée)</div>
+  <div class="legend-item"><div class="ldot" style="background:#818cf8;"></div>DIM_Produit (partagée)</div>
+  <div class="legend-item"><div class="ldot" style="background:#0ea5e9;"></div>DIM_Machine</div>
+  <div class="legend-item"><div class="ldot" style="background:#a78bfa;"></div>DIM_Client</div>
+  <div class="legend-item"><div class="ldot" style="background:#c084fc;"></div>DIM_Fournisseur</div>
+  <div class="legend-item"><div class="ldot" style="background:#7c3aed;"></div>DIM_Statut</div>
+  <div class="legend-item"><div class="ldot" style="background:#fbbf24;"></div>Colonne pour KPI</div>
+</div>
+
+<script>
+function R(id){
+  const e=document.getElementById(id),w=document.querySelector('.layout-wrapper');
+  if(!e||!w)return null;
+  const r=e.getBoundingClientRect(),wr=w.getBoundingClientRect();
+  return{cx:r.left-wr.left+r.width/2,cy:r.top-wr.top+r.height/2,
+    left:r.left-wr.left,right:r.right-wr.left,top:r.top-wr.top,bottom:r.bottom-wr.top};
+}
+function L(svg,x1,y1,x2,y2,col,dash,mk){
+  const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+  const mx=(x1+x2)/2;
+  p.setAttribute('d',`M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`);
+  p.setAttribute('stroke',col);p.setAttribute('stroke-width','2');
+  p.setAttribute('fill','none');p.setAttribute('opacity','0.7');
+  if(dash)p.setAttribute('stroke-dasharray','6,3');
+  if(mk)p.setAttribute('marker-end',`url(#${mk})`);
+  svg.appendChild(p);
+}
+window.addEventListener('load',()=>{
+  const svg=document.getElementById('svg-lines');
+  const wr=document.querySelector('.layout-wrapper');
+  svg.setAttribute('width',wr.scrollWidth);svg.setAttribute('height',wr.scrollHeight);
+  const T=R('dim-temps'),P=R('dim-produit'),M=R('dim-machine');
+  const C=R('dim-client'),F=R('dim-fourn'),S=R('dim-statut');
+  const FP=R('fait-prod'),FV=R('fait-ventes'),FS=R('fait-stock'),FA=R('fait-achats'),FQ=R('fait-qualite');
+  [FP,FV,FS,FA,FQ].forEach(f=>L(svg,T.cx,T.bottom,f.left,f.cy,'#6366f1',false,'m-t'));
+  [FP,FV,FS,FA,FQ].forEach(f=>L(svg,P.cx,P.bottom,f.left+16,f.cy,'#818cf8',true,'m-p'));
+  L(svg,M.right,M.cy,    FP.left,FP.cy,   '#0ea5e9',false,'m-m');
+  L(svg,M.right,M.cy+14, FQ.left,FQ.cy,   '#0ea5e9',false,'m-m');
+  L(svg,C.right,C.cy,    FV.left,FV.cy,   '#a78bfa',false,'m-c');
+  L(svg,F.right,F.cy,    FA.left,FA.cy,   '#c084fc',false,'m-f');
+  L(svg,S.right,S.cy,    FP.left,FP.cy+18,'#7c3aed',false,'m-s');
+});
+</script>
+</body>
+</html>

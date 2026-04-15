@@ -1,0 +1,1 @@
+export { default as RapportsPage } from './views/ReportsPage';
