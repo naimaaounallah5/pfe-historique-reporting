@@ -17,7 +17,6 @@ const fmt = (n: number) => n.toLocaleString('fr-TN', { minimumFractionDigits: 0 
 let globalConnection: signalR.HubConnection | null = null;
 let globalConnectionCount = 0;
 
-// Composant EmptyChart
 const EmptyChart = ({ message = "Aucune donnée disponible" }: { message?: string }) => (
   <div className="flex flex-col items-center justify-center h-full gap-2 py-8">
     <span className="text-3xl opacity-30">📊</span>
@@ -26,23 +25,18 @@ const EmptyChart = ({ message = "Aucune donnée disponible" }: { message?: strin
   </div>
 );
 
-// Plugin pour afficher les pourcentages sur le camembert
 const doughnutLabelPlugin = {
   id: 'doughnutLabel',
   afterDatasetsDraw: (chart: any) => {
     const { ctx, data } = chart;
     const total = data.datasets[0].data.reduce((a: number, b: number) => a + b, 0);
-    
     if (total === 0) return;
-    
     const meta = chart.getDatasetMeta(0);
-    
     meta.data.forEach((element: any, index: number) => {
       const value = data.datasets[0].data[index];
       const percentage = ((value / total) * 100).toFixed(1);
       const isSmall = parseFloat(percentage) < 5;
       const position = element.tooltipPosition();
-      
       ctx.save();
       ctx.font = isSmall ? 'bold 11px sans-serif' : 'bold 14px sans-serif';
       ctx.fillStyle = '#ffffff';
@@ -55,24 +49,53 @@ const doughnutLabelPlugin = {
   }
 };
 
-const DetailModal = ({ type, data, onClose }: { type: string; data: any[]; onClose: () => void }) => {
-  if (!data.length) return null;
-  
+// ── Modal détails ─────────────────────────────────────────
+const DetailModal = ({
+  type, data, dataTrimestre, dataAnnee, onClose
+}: {
+  type: string;
+  data: any[];
+  dataTrimestre?: any[];
+  dataAnnee?: any[];
+  onClose: () => void;
+}) => {
+  const [tempsVue, setTempsVue] = useState<'mois' | 'trimestre' | 'annee'>('mois');
+
+  const currentData = type === 'temps'
+    ? tempsVue === 'mois' ? data
+      : tempsVue === 'trimestre' ? (dataTrimestre ?? [])
+      : (dataAnnee ?? [])
+    : data;
+
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <h3 className="font-bold text-gray-800 text-base">
-            📊 Détails - {type === 'produit' ? 'Taux de Défaut par Produit' : 
-                         type === 'machine' ? 'Taux de Défaut par Machine' : 
+            📊 Détails - {type === 'produit' ? 'Taux de Défaut par Produit' :
+                         type === 'machine' ? 'Taux de Défaut par Machine' :
                          type === 'temps' ? 'Évolution du Taux de Défaut' :
                          'Répartition Conformes / Défauts'}
           </h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+          <div className="flex items-center gap-3">
+            {type === 'temps' && (
+              <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">
+                {(['mois', 'trimestre', 'annee'] as const).map(v => (
+                  <button key={v} onClick={() => setTempsVue(v)}
+                    className={`px-3 py-1 rounded-md text-xs font-semibold transition-all ${
+                      tempsVue === v ? 'bg-white shadow text-purple-600' : 'text-gray-500 hover:text-gray-700'
+                    }`}>
+                    {v.charAt(0).toUpperCase() + v.slice(1)}
+                  </button>
+                ))}
+              </div>
+            )}
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+          </div>
         </div>
         <div className="overflow-y-auto flex-1 p-4">
-          {data.length === 0 ? (
+          {currentData.length === 0 ? (
             <EmptyChart />
           ) : (
             <table className="w-full border-collapse">
@@ -107,7 +130,7 @@ const DetailModal = ({ type, data, onClose }: { type: string; data: any[]; onClo
                 </tr>
               </thead>
               <tbody>
-                {type === 'produit' && data.map((item, idx) => (
+                {type === 'produit' && currentData.map((item, idx) => (
                   <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                     <td className="px-4 py-2 text-sm">{item.produit}</td>
                     <td className="px-4 py-2 text-sm">{item.categorie}</td>
@@ -116,7 +139,7 @@ const DetailModal = ({ type, data, onClose }: { type: string; data: any[]; onClo
                     <td className="px-4 py-2 text-sm text-right font-bold">{item.tauxDefaut}%</td>
                   </tr>
                 ))}
-                {type === 'machine' && data.map((item, idx) => (
+                {type === 'machine' && currentData.map((item, idx) => (
                   <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                     <td className="px-4 py-2 text-sm">{item.machine}</td>
                     <td className="px-4 py-2 text-sm">{item.groupe}</td>
@@ -126,7 +149,7 @@ const DetailModal = ({ type, data, onClose }: { type: string; data: any[]; onClo
                     <td className="px-4 py-2 text-sm text-right font-bold">{item.tauxDefaut}%</td>
                   </tr>
                 ))}
-                {type === 'temps' && data.map((item, idx) => (
+                {type === 'temps' && currentData.map((item, idx) => (
                   <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                     <td className="px-4 py-2 text-sm">{item.label}</td>
                     <td className="px-4 py-2 text-sm text-right">{fmt(item.nombreControles)}</td>
@@ -134,8 +157,8 @@ const DetailModal = ({ type, data, onClose }: { type: string; data: any[]; onClo
                     <td className="px-4 py-2 text-sm text-right font-bold">{item.tauxDefaut}%</td>
                   </tr>
                 ))}
-                {type === 'repartition' && data.map((item, idx) => {
-                  const total = (data[0]?.valeur + data[1]?.valeur) || 1;
+                {type === 'repartition' && currentData.map((item, idx) => {
+                  const total = (currentData[0]?.valeur + currentData[1]?.valeur) || 1;
                   const pourcentage = ((item.valeur / total) * 100).toFixed(1);
                   return (
                     <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
@@ -154,10 +177,10 @@ const DetailModal = ({ type, data, onClose }: { type: string; data: any[]; onClo
   );
 };
 
-const ChartActions = ({ onDetails, chartRef, title }: { 
-  onDetails: () => void; 
-  chartRef: React.RefObject<any>; 
-  title: string 
+const ChartActions = ({ onDetails, chartRef, title }: {
+  onDetails: () => void;
+  chartRef: React.RefObject<any>;
+  title: string
 }) => {
   const telechargerPDF = () => {
     if (!chartRef?.current) return;
@@ -221,7 +244,9 @@ const QualiteGlobalView = () => {
   const [tempsVue, setTempsVue] = useState<'mois'|'trimestre'|'annee'>('mois');
   const [connexionStatut, setConnexionStatut] = useState<'connected'|'connecting'|'disconnected'>('connecting');
   const [derniereMAJ, setDerniereMAJ] = useState<Date | null>(null);
-  const [detailModal, setDetailModal] = useState<{type: string; data: any[]} | null>(null);
+  const [detailModal, setDetailModal] = useState<{
+    type: string; data: any[]; dataTrimestre?: any[]; dataAnnee?: any[];
+  } | null>(null);
 
   const refTemps    = useRef<any>(null);
   const refProduit  = useRef<any>(null);
@@ -373,18 +398,15 @@ const QualiteGlobalView = () => {
   };
 
   const optionsDoughnut = {
-    responsive: true, 
+    responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { 
+      legend: {
         position: 'bottom' as const,
-        labels: {
-          font: { size: 12 },
-          usePointStyle: true,
-        }
+        labels: { font: { size: 12 }, usePointStyle: true }
       },
-      tooltip: { 
-        callbacks: { 
+      tooltip: {
+        callbacks: {
           label: (ctx: any) => {
             const value = ctx.raw;
             const percentage = ((value / total) * 100).toFixed(1);
@@ -433,10 +455,10 @@ const QualiteGlobalView = () => {
     const now = new Date();
     const win = window.open('', '_blank');
     if (!win) { alert('Autorisez les popups pour ce site.'); return; }
-    
+
     const conformite = vm.global?.tauxConformite ?? 0;
     const defautsPct = vm.global?.tauxDefautMoyen ?? 0;
-    
+
     win.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/>
       <title>Dashboard Qualité</title>
       <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;padding:20px;color:#111827}
@@ -490,7 +512,13 @@ const QualiteGlobalView = () => {
   return (
     <div className="space-y-6" ref={dashboardRef}>
       {detailModal && (
-        <DetailModal type={detailModal.type} data={detailModal.data} onClose={() => setDetailModal(null)} />
+        <DetailModal
+          type={detailModal.type}
+          data={detailModal.data}
+          dataTrimestre={detailModal.dataTrimestre}
+          dataAnnee={detailModal.dataAnnee}
+          onClose={() => setDetailModal(null)}
+        />
       )}
 
       {/* Filtres */}
@@ -555,7 +583,16 @@ const QualiteGlobalView = () => {
           <div className="px-4 py-3 border-b border-gray-50 flex items-center justify-between flex-wrap gap-2">
             <span className="text-sm font-semibold text-gray-700">📈 Évolution du Taux de Défaut</span>
             <div className="flex items-center gap-2">
-              <ChartActions onDetails={() => setDetailModal({ type: 'temps', data: tempsData })} chartRef={refTemps} title="Évolution du Taux de Défaut" />
+              <ChartActions
+                onDetails={() => setDetailModal({
+                  type: 'temps',
+                  data: vm.parTempsMois,
+                  dataTrimestre: vm.parTempsTrimestre,
+                  dataAnnee: vm.parTempsAnnee,
+                })}
+                chartRef={refTemps}
+                title="Évolution du Taux de Défaut"
+              />
               <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">
                 {(['mois','trimestre','annee'] as const).map(v => (
                   <button key={v} onClick={() => setTempsVue(v)}

@@ -87,7 +87,7 @@ const CreateRapportModal: React.FC<{ vm: ReturnType<typeof useCreateRapport> }> 
       onClick={(e) => { if (e.target === e.currentTarget) vm.closeModal(); }}
     >
       <div onClick={(e) => e.stopPropagation()}
-        style={{ background: 'white', borderRadius: 20, width: 1100, maxWidth: '96vw', boxShadow: '0 24px 64px rgba(0,0,0,0.18)', overflow: 'hidden', fontFamily: "'DM Sans', sans-serif" }}>
+        style={{ background: 'white', borderRadius: 20, width: 920, maxWidth: '96vw', boxShadow: '0 24px 64px rgba(0,0,0,0.18)', overflow: 'hidden', fontFamily: "'DM Sans', sans-serif" }}>
 
         {/* HEADER */}
         <div style={{ background: 'linear-gradient(135deg,#4F46E5,#7C3AED)', padding: '20px 26px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -99,7 +99,7 @@ const CreateRapportModal: React.FC<{ vm: ReturnType<typeof useCreateRapport> }> 
         </div>
 
         {/* BODY */}
-        <div style={{ display: 'flex', height: 798 }}>
+        <div style={{ display: 'flex', height: 550 }}>
 
           {/* ── GAUCHE ── */}
           <div style={{ width: 400, flexShrink: 0, padding: 20, borderRight: '1px solid #E5E7EB', overflowY: 'auto', background: 'white' }}>

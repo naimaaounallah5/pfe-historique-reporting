@@ -214,15 +214,16 @@ export default function OrdersPage() {
           )}
         </div>
 
-        <select className="ord-select"
-          value={vm.filtreStatut ?? ''}
-          onChange={e => vm.setFiltreStatut(e.target.value === '' ? undefined : Number(e.target.value))}>
-          <option value="">Tous les statuts</option>
-          <option value="0">Simulé</option>
-          <option value="1">Planifié</option>
-          <option value="2">En cours</option>
-          <option value="3">Terminé</option>
-        </select>
+    <select className="ord-select"
+    value={vm.filtreStatut ?? ''}
+    onChange={e => vm.setFiltreStatut(
+        e.target.value === '' ? undefined : Number(e.target.value)
+    )}>
+    <option value="">Tous les statuts</option>
+    <option value="1">Planifié</option>
+    <option value="2">En cours</option>
+    <option value="3">Terminé</option>
+ </select>
 
         <select className="ord-select"
           value={vm.filtreSite}

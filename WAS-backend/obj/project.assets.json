@@ -10402,11 +10402,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\pfe-develloppement\\WAS-backend\\WAS-backend.csproj",
+      "projectUniqueName": "C:\\pfe-develloppement1\\WAS-backend\\WAS-backend.csproj",
       "projectName": "WAS-backend",
-      "projectPath": "C:\\pfe-develloppement\\WAS-backend\\WAS-backend.csproj",
+      "projectPath": "C:\\pfe-develloppement1\\WAS-backend\\WAS-backend.csproj",
       "packagesPath": "C:\\Users\\LENOVO\\.nuget\\packages\\",
-      "outputPath": "C:\\pfe-develloppement\\WAS-backend\\obj\\",
+      "outputPath": "C:\\pfe-develloppement1\\WAS-backend\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\LENOVO\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -10511,6 +10511,16 @@
     }
   },
   "logs": [
+    {
+      "code": "NU1902",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Le package 'MailKit' 4.3.0 présente une vulnérabilité de gravité moyenne connue, https://github.com/advisories/GHSA-9j88-vvj5-vhgr.",
+      "libraryId": "MailKit",
+      "targetGraphs": [
+        "net8.0"
+      ]
+    },
     {
       "code": "NU1902",
       "level": "Warning",

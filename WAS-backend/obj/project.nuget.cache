@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "Ok02A1gRgMg=",
+  "dgSpecHash": "62Svs5Xhb8Y=",
   "success": true,
-  "projectFilePath": "C:\\pfe-develloppement\\WAS-backend\\WAS-backend.csproj",
+  "projectFilePath": "C:\\pfe-develloppement1\\WAS-backend\\WAS-backend.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\LENOVO\\.nuget\\packages\\azure.core\\1.25.0\\azure.core.1.25.0.nupkg.sha512",
     "C:\\Users\\LENOVO\\.nuget\\packages\\azure.identity\\1.7.0\\azure.identity.1.7.0.nupkg.sha512",
@@ -198,6 +198,16 @@
     "C:\\Users\\LENOVO\\.nuget\\packages\\xlparser\\1.5.2\\xlparser.1.5.2.nupkg.sha512"
   ],
   "logs": [
+    {
+      "code": "NU1902",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Le package 'MailKit' 4.3.0 présente une vulnérabilité de gravité moyenne connue, https://github.com/advisories/GHSA-9j88-vvj5-vhgr.",
+      "libraryId": "MailKit",
+      "targetGraphs": [
+        "net8.0"
+      ]
+    },
     {
       "code": "NU1902",
       "level": "Warning",

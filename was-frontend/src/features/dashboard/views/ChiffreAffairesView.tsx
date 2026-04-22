@@ -25,7 +25,19 @@ const EmptyChart = ({ message = "Aucune donnée disponible" }: { message?: strin
   </div>
 );
 
-const DetailModal = ({ type, data, onClose, vm }: { type: string; data: any[]; onClose: () => void; vm: any }) => {
+const DetailModal = ({ type, data, onClose, vm, meta }: {
+  type: string;
+  data: any[];
+  onClose: () => void;
+  vm: any;
+  meta?: any;
+}) => {
+  const [tempsTab, setTempsTab] = useState<'mois' | 'trimestre' | 'annee'>(meta?.vue || 'mois');
+
+  const tempsDisplayData = type === 'temps'
+    ? (tempsTab === 'mois' ? meta?.mois : tempsTab === 'trimestre' ? meta?.trimestre : meta?.annee) || data
+    : data;
+
   if (!data.length) return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
@@ -46,15 +58,34 @@ const DetailModal = ({ type, data, onClose, vm }: { type: string; data: any[]; o
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col">
+
+        {/* ── HEADER : titre à gauche, onglets + ✕ à droite ── */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <h3 className="font-bold text-gray-800 text-base">
-            📊 Détails - {type === 'client' ? 'Chiffre d\'Affaires par Client' :
-                         type === 'produit' ? 'Chiffre d\'Affaires par Produit' :
-                         type === 'temps' ? 'Évolution du CA' :
+            📊 Détails - {type === 'client' ? "Chiffre d'Affaires par Client" :
+                         type === 'produit' ? "Chiffre d'Affaires par Produit" :
+                         type === 'temps'   ? 'Évolution du CA' :
                          'Comparaison Client/Produit'}
           </h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+          <div className="flex items-center gap-3">
+            {/* ✅ Onglets à droite — visibles uniquement pour 'temps' */}
+            {type === 'temps' && (
+              <div className="flex gap-1 bg-slate-100 rounded-lg p-1">
+                {(['mois', 'trimestre', 'annee'] as const).map(v => (
+                  <button key={v} onClick={() => setTempsTab(v)}
+                    className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                      tempsTab === v
+                        ? 'bg-white shadow text-blue-600'
+                        : 'text-slate-400 hover:text-slate-600'}`}>
+                    {v === 'mois' ? '📅 Mois' : v === 'trimestre' ? '📆 Trimestre' : '🗓️ Année'}
+                  </button>
+                ))}
+              </div>
+            )}
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+          </div>
         </div>
+
         <div className="overflow-y-auto flex-1 p-4">
           <table className="w-full border-collapse">
             <thead className="bg-blue-50 sticky top-0">
@@ -63,7 +94,6 @@ const DetailModal = ({ type, data, onClose, vm }: { type: string; data: any[]; o
                   <th className="px-4 py-3 text-left text-xs font-bold uppercase">Client</th>
                   <th className="px-4 py-3 text-right text-xs font-bold uppercase">CA</th>
                   <th className="px-4 py-3 text-right text-xs font-bold uppercase">Part</th>
-                  <th className="px-4 py-3 text-right text-xs font-bold uppercase">Évolution</th>
                 </>)}
                 {type === 'produit' && (<>
                   <th className="px-4 py-3 text-left text-xs font-bold uppercase">Produit</th>
@@ -91,7 +121,6 @@ const DetailModal = ({ type, data, onClose, vm }: { type: string; data: any[]; o
                   <td className="px-4 py-2 text-sm">{item.clientPrenom} {item.clientNom}</td>
                   <td className="px-4 py-2 text-sm text-right font-bold">{vm?.formatMonnaie ? vm.formatMonnaie(item.ca) : item.ca}</td>
                   <td className="px-4 py-2 text-sm text-right">{item.partPourcentage}%</td>
-                  <td className="px-4 py-2 text-sm text-right">{item.evolutionAnnuelle}%</td>
                 </tr>
               ))}
               {type === 'produit' && data.map((item: any, idx: number) => (
@@ -103,7 +132,7 @@ const DetailModal = ({ type, data, onClose, vm }: { type: string; data: any[]; o
                   <td className="px-4 py-2 text-sm text-right">{item.partPourcentage}%</td>
                 </tr>
               ))}
-              {type === 'temps' && data.map((item: any, idx: number) => (
+              {type === 'temps' && tempsDisplayData.map((item: any, idx: number) => (
                 <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                   <td className="px-4 py-2 text-sm">{item.periode}</td>
                   <td className="px-4 py-2 text-sm text-right font-bold">{vm?.formatMonnaie ? vm.formatMonnaie(item.ca) : item.ca}</td>
@@ -199,7 +228,7 @@ const ChiffreAffairesView = () => {
   const [tempsVue, setTempsVue] = useState<'mois'|'trimestre'|'annee'>('mois');
   const [connexionStatut, setConnexionStatut] = useState<'connected'|'connecting'|'disconnected'>('connecting');
   const [derniereMAJ, setDerniereMAJ] = useState<Date | null>(null);
-  const [detailModal, setDetailModal] = useState<{type: string; data: any[]} | null>(null);
+  const [detailModal, setDetailModal] = useState<{type: string; data: any[]; meta?: any} | null>(null);
   const [clientCompare1, setClientCompare1] = useState<number | undefined>(undefined);
   const [produitCompare, setProduitCompare] = useState<number | undefined>(undefined);
 
@@ -209,7 +238,6 @@ const ChiffreAffairesView = () => {
   const refComparaison = useRef<any>(null);
   const dashboardRef   = useRef<HTMLDivElement>(null);
 
-  // ✅ Déclencher fetchComparaison quand client ou produit change
   useEffect(() => {
     if (clientCompare1 && produitCompare) {
       vm.fetchComparaison(clientCompare1, produitCompare);
@@ -286,7 +314,7 @@ const ChiffreAffairesView = () => {
       `${c.clientPrenom || ''} ${c.clientNom || ''}`.slice(0,25)+'…' :
       `${c.clientPrenom || ''} ${c.clientNom || ''}`),
     datasets: [{
-      label: 'Chiffre d\'Affaires',
+      label: "Chiffre d'Affaires",
       data: tousClients.map((c: any) => c.ca || 0),
       backgroundColor: 'rgba(59,130,246,0.7)',
       borderRadius: 5,
@@ -296,7 +324,7 @@ const ChiffreAffairesView = () => {
   const chartProduits = {
     labels: tousProduits.map((p: any) => (p.produitNom || '').length > 25 ? (p.produitNom || '').slice(0,25)+'…' : (p.produitNom || '')),
     datasets: [{
-      label: 'Chiffre d\'Affaires',
+      label: "Chiffre d'Affaires",
       data: tousProduits.map((p: any) => p.ca || 0),
       backgroundColor: 'rgba(16,185,129,0.7)',
       borderRadius: 5,
@@ -306,7 +334,7 @@ const ChiffreAffairesView = () => {
   const chartTemps = {
     labels: tempsData.map((t: any) => t.periode || ''),
     datasets: [{
-      label: 'Chiffre d\'Affaires',
+      label: "Chiffre d'Affaires",
       data: tempsData.map((t: any) => t.ca || 0),
       borderColor: '#3B82F6',
       backgroundColor: 'rgba(59,130,246,0.1)',
@@ -318,19 +346,15 @@ const ChiffreAffairesView = () => {
     }],
   };
 
-  // ✅ Utiliser comparaisonData du viewmodel
   const comparData = vm.comparaisonData;
 
   const clientNom = clients.find((c: any) => c.clientId === clientCompare1);
   const clientLabel = clientNom ? `${clientNom.clientPrenom || ''} ${clientNom.clientNom || ''}` : 'Client';
 
   const chartComparaison = comparData ? {
-    labels: [
-      `${clientLabel} 2024`,
-      `${clientLabel} 2025`
-    ],
+    labels: [`${clientLabel} 2024`, `${clientLabel} 2025`],
     datasets: [{
-      label: 'Chiffre d\'Affaires',
+      label: "Chiffre d'Affaires",
       data: [comparData.ca1, comparData.ca2],
       backgroundColor: ['rgba(59,130,246,0.7)', 'rgba(16,185,129,0.7)'],
       borderRadius: 5,
@@ -361,13 +385,13 @@ const ChiffreAffairesView = () => {
     const pageH = pdf.internal.pageSize.getHeight();
     let y = 10;
     pdf.setFontSize(18);
-    pdf.text('Performance Commerciale - Chiffre d\'Affaires', w / 2, y, { align: 'center' }); y += 12;
+    pdf.text("Performance Commerciale - Chiffre d'Affaires", w / 2, y, { align: 'center' }); y += 12;
     pdf.setFontSize(10);
     pdf.text(`CA Total : ${vm.formatMonnaie ? vm.formatMonnaie(globalData.caTotal) : globalData.caTotal}  |  Clients actifs : ${globalData.nombreClientsActifs}`, 10, y); y += 7;
     pdf.text(`Produits vendus : ${globalData.nombreProduitsVendus}  |  Croissance : ${globalData.croissanceAnnuelle}%`, 10, y); y += 10;
     [
-      { ref: refClients,     label: 'Chiffre d\'Affaires par Client' },
-      { ref: refProduits,    label: 'Chiffre d\'Affaires par Produit' },
+      { ref: refClients,     label: "Chiffre d'Affaires par Client" },
+      { ref: refProduits,    label: "Chiffre d'Affaires par Produit" },
       { ref: refTemps,       label: 'Évolution du CA' },
       { ref: refComparaison, label: 'Comparaison Client/Produit/Année' },
     ].forEach(({ ref, label }) => {
@@ -383,8 +407,8 @@ const ChiffreAffairesView = () => {
 
   const imprimerDashboard = () => {
     const images = [
-      { ref: refClients,     label: '👥 Chiffre d\'Affaires par Client' },
-      { ref: refProduits,    label: '📦 Chiffre d\'Affaires par Produit' },
+      { ref: refClients,     label: "👥 Chiffre d'Affaires par Client" },
+      { ref: refProduits,    label: "📦 Chiffre d'Affaires par Produit" },
       { ref: refTemps,       label: '📈 Évolution du CA' },
       { ref: refComparaison, label: '📊 Comparaison Client/Produit' },
     ].map(({ ref, label }) => ({ label, img: ref.current ? ref.current.toBase64Image('image/png', 1) : null }));
@@ -420,7 +444,13 @@ const ChiffreAffairesView = () => {
   return (
     <div className="space-y-6" ref={dashboardRef}>
       {detailModal && (
-        <DetailModal type={detailModal.type} data={detailModal.data} onClose={() => setDetailModal(null)} vm={vm} />
+        <DetailModal
+          type={detailModal.type}
+          data={detailModal.data}
+          meta={detailModal.meta}
+          onClose={() => setDetailModal(null)}
+          vm={vm}
+        />
       )}
 
       {/* ── Filtres ── */}
@@ -570,7 +600,17 @@ const ChiffreAffairesView = () => {
                   </button>
                 ))}
               </div>
-              <ChartActions onDetails={() => setDetailModal({ type: 'temps', data: tempsData })}
+              <ChartActions
+                onDetails={() => setDetailModal({
+                  type: 'temps',
+                  data: tempsData,
+                  meta: {
+                    vue: tempsVue,
+                    mois: tempsMois,
+                    trimestre: tempsTrimestre,
+                    annee: tempsAnnee,
+                  }
+                })}
                 chartRef={refTemps} title="Évolution du CA" accent="purple" />
             </div>
           </div>

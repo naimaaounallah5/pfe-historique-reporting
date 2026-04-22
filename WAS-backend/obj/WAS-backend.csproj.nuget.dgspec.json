@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\pfe-develloppement\\WAS-backend\\WAS-backend.csproj": {}
+    "C:\\pfe-develloppement1\\WAS-backend\\WAS-backend.csproj": {}
   },
   "projects": {
-    "C:\\pfe-develloppement\\WAS-backend\\WAS-backend.csproj": {
+    "C:\\pfe-develloppement1\\WAS-backend\\WAS-backend.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\pfe-develloppement\\WAS-backend\\WAS-backend.csproj",
+        "projectUniqueName": "C:\\pfe-develloppement1\\WAS-backend\\WAS-backend.csproj",
         "projectName": "WAS-backend",
-        "projectPath": "C:\\pfe-develloppement\\WAS-backend\\WAS-backend.csproj",
+        "projectPath": "C:\\pfe-develloppement1\\WAS-backend\\WAS-backend.csproj",
         "packagesPath": "C:\\Users\\LENOVO\\.nuget\\packages\\",
-        "outputPath": "C:\\pfe-develloppement\\WAS-backend\\obj\\",
+        "outputPath": "C:\\pfe-develloppement1\\WAS-backend\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\LENOVO\\AppData\\Roaming\\NuGet\\NuGet.Config"

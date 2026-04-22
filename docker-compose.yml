@@ -1,0 +1,14 @@
+services:
+  backend:
+    build: ./WAS-backend
+    ports:
+      - "5088:5088"
+    environment:
+      - ASPNETCORE_URLS=http://+:5088
+
+  frontend:
+    build: ./was-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend

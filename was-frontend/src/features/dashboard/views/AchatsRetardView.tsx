@@ -699,7 +699,7 @@ const AchatsRetardView = () => {
           <div className="ml-auto flex items-center gap-2">
             <button onClick={exportDashboardPDF}
               className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold shadow-sm"
-              style={{ background: C.rouge, color: C.white }}>📥 Télécharger PDF</button>
+              style={{ background: C.rouge, color: C.white }}>📥 PDF</button>
             <button onClick={imprimerDashboard}
               className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold shadow-sm"
               style={{ background: C.slate, color: C.white }}>🖨️ Imprimer</button>

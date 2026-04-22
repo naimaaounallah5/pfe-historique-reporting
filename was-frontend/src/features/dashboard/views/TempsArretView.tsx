@@ -19,23 +19,54 @@ const couleurArret = (val: number, max: number) => {
 };
 
 // ── Modal détails ─────────────────────────────────────────
-const DetailModal = ({ type, data, onClose }: { type: string; data: any[]; onClose: () => void }) => {
-  if (!data.length) return null;
+const DetailModal = ({
+  type, data, dataTrimestre, dataAnnee, onClose
+}: {
+  type: string;
+  data: any[];
+  dataTrimestre?: any[];
+  dataAnnee?: any[];
+  onClose: () => void;
+}) => {
+  const [tempsVue, setTempsVue] = useState<'mois' | 'trimestre' | 'annee'>('mois');
+
+  const currentData = type === 'temps'
+    ? tempsVue === 'mois' ? data
+      : tempsVue === 'trimestre' ? (dataTrimestre ?? [])
+      : (dataAnnee ?? [])
+    : data;
+
+  if (!currentData.length && type !== 'temps') return null;
+
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <h3 className="font-bold text-gray-800 text-base">
-            📊 Détails — {type==='machine' ? "Temps d'Arrêt par Machine" : type==='produit' ? "Temps d'Arrêt par Produit" : "Évolution des Arrêts"}
+            📊 Détails — {type === 'machine' ? "Temps d'Arrêt par Machine" : type === 'produit' ? "Temps d'Arrêt par Produit" : "Évolution des Arrêts"}
           </h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+          <div className="flex items-center gap-2">
+            {type === 'temps' && (
+              <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">
+                {(['mois', 'trimestre', 'annee'] as const).map(v => (
+                  <button key={v} onClick={() => setTempsVue(v)}
+                    className={`px-3 py-1 rounded-md text-xs font-semibold transition-all ${
+                      tempsVue === v ? 'bg-white shadow text-orange-600' : 'text-gray-500 hover:text-gray-700'
+                    }`}>
+                    {v.charAt(0).toUpperCase() + v.slice(1)}
+                  </button>
+                ))}
+              </div>
+            )}
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+          </div>
         </div>
         <div className="overflow-y-auto flex-1 p-4">
           <table className="w-full border-collapse">
             <thead className="bg-orange-50 sticky top-0">
               <tr>
-                {type==='machine' && <>
+                {type === 'machine' && <>
                   <th className="px-4 py-3 text-left text-xs font-bold uppercase text-orange-700">Machine</th>
                   <th className="px-4 py-3 text-left text-xs font-bold uppercase text-orange-700">Groupe</th>
                   <th className="px-4 py-3 text-right text-xs font-bold uppercase text-orange-700">Arrêts (min)</th>
@@ -43,13 +74,13 @@ const DetailModal = ({ type, data, onClose }: { type: string; data: any[]; onClo
                   <th className="px-4 py-3 text-right text-xs font-bold uppercase text-orange-700">Ordres</th>
                   <th className="px-4 py-3 text-right text-xs font-bold uppercase text-orange-700">%</th>
                 </>}
-                {type==='produit' && <>
+                {type === 'produit' && <>
                   <th className="px-4 py-3 text-left text-xs font-bold uppercase text-orange-700">Produit</th>
                   <th className="px-4 py-3 text-right text-xs font-bold uppercase text-orange-700">Arrêts (min)</th>
                   <th className="px-4 py-3 text-right text-xs font-bold uppercase text-orange-700">Ordres</th>
                   <th className="px-4 py-3 text-right text-xs font-bold uppercase text-orange-700">Moy. arrêt/ordre</th>
                 </>}
-                {type==='temps' && <>
+                {type === 'temps' && <>
                   <th className="px-4 py-3 text-left text-xs font-bold uppercase text-orange-700">Période</th>
                   <th className="px-4 py-3 text-right text-xs font-bold uppercase text-orange-700">Arrêts (min)</th>
                   <th className="px-4 py-3 text-right text-xs font-bold uppercase text-orange-700">Ordres</th>
@@ -57,8 +88,8 @@ const DetailModal = ({ type, data, onClose }: { type: string; data: any[]; onClo
               </tr>
             </thead>
             <tbody>
-              {type==='machine' && data.map((item,idx) => (
-                <tr key={idx} className={idx%2===0?'bg-white':'bg-gray-50'}>
+              {type === 'machine' && currentData.map((item, idx) => (
+                <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                   <td className="px-4 py-2 text-sm font-medium">{item.machineNom}</td>
                   <td className="px-4 py-2 text-sm">
                     <span className="bg-orange-50 text-orange-700 text-xs px-2 py-0.5 rounded-full">{item.machineGroupe}</span>
@@ -71,21 +102,26 @@ const DetailModal = ({ type, data, onClose }: { type: string; data: any[]; onClo
                   </td>
                 </tr>
               ))}
-              {type==='produit' && data.map((item,idx) => (
-                <tr key={idx} className={idx%2===0?'bg-white':'bg-gray-50'}>
+              {type === 'produit' && currentData.map((item, idx) => (
+                <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                   <td className="px-4 py-2 text-sm font-medium">{item.produitNom}</td>
                   <td className="px-4 py-2 text-sm text-right font-bold text-orange-600">{item.totalArretMinutes}</td>
                   <td className="px-4 py-2 text-sm text-right">{item.nbOrdres}</td>
                   <td className="px-4 py-2 text-sm text-right text-amber-600 font-semibold">{item.moyenneArretParOrdre} min</td>
                 </tr>
               ))}
-              {type==='temps' && data.map((item,idx) => (
-                <tr key={idx} className={idx%2===0?'bg-white':'bg-gray-50'}>
+              {type === 'temps' && currentData.map((item, idx) => (
+                <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                   <td className="px-4 py-2 text-sm font-medium">{item.periode}</td>
                   <td className="px-4 py-2 text-sm text-right font-bold text-orange-600">{item.totalArretMinutes}</td>
                   <td className="px-4 py-2 text-sm text-right">{item.nbOrdres}</td>
                 </tr>
               ))}
+              {type === 'temps' && currentData.length === 0 && (
+                <tr>
+                  <td colSpan={3} className="px-4 py-8 text-center text-gray-400 text-sm">📭 Aucune donnée disponible</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -99,8 +135,8 @@ const ChartActions = ({ onDetails, chartRef, title, accent = "orange" }: {
   onDetails: () => void; chartRef: React.RefObject<any>;
   title: string; accent?: "orange" | "red" | "amber";
 }) => {
-  const colorClass = accent==="red"   ? "border-red-200 text-red-600 hover:bg-red-50" :
-                     accent==="amber" ? "border-amber-200 text-amber-600 hover:bg-amber-50" :
+  const colorClass = accent === "red"   ? "border-red-200 text-red-600 hover:bg-red-50" :
+                     accent === "amber" ? "border-amber-200 text-amber-600 hover:bg-amber-50" :
                      "border-orange-200 text-orange-600 hover:bg-orange-50";
 
   const telechargerPDF = () => {
@@ -110,8 +146,8 @@ const ChartActions = ({ onDetails, chartRef, title, accent = "orange" }: {
     const w = pdf.internal.pageSize.getWidth();
     const h = pdf.internal.pageSize.getHeight();
     pdf.setFontSize(14);
-    pdf.text(title, w/2, 15, { align:'center' });
-    pdf.addImage(imgData, 'PNG', 10, 25, w-20, h-35);
+    pdf.text(title, w / 2, 15, { align: 'center' });
+    pdf.addImage(imgData, 'PNG', 10, 25, w - 20, h - 35);
     pdf.save(`${title}.pdf`);
   };
 
@@ -119,7 +155,7 @@ const ChartActions = ({ onDetails, chartRef, title, accent = "orange" }: {
     if (!chartRef?.current) return;
     const imgData = chartRef.current.toBase64Image('image/png', 1);
     const now = new Date();
-    const win = window.open('','_blank'); if (!win) return;
+    const win = window.open('', '_blank'); if (!win) return;
     win.document.write(`<html><head><title>${title}</title>
       <style>body{margin:20px;font-family:Arial,sans-serif;}
       .hdr{text-align:center;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #e5e7eb;}
@@ -159,7 +195,7 @@ const TempsArretView = () => {
   const { connexionStatut, derniereMAJ } = vm;
 
   const [tempsVue,    setTempsVue]    = useState<'mois'|'trimestre'|'annee'>('mois');
-  const [detailModal, setDetailModal] = useState<{type:string; data:any[]} | null>(null);
+  const [detailModal, setDetailModal] = useState<{type:string; data:any[]; dataTrimestre?:any[]; dataAnnee?:any[]} | null>(null);
 
   const refMachines = useRef<any>(null);
   const refProduits = useRef<any>(null);
@@ -192,8 +228,8 @@ const TempsArretView = () => {
   const tempsAnnee     = vm.tempsAnnee     || [];
   const annees         = vm.annees         || [];
 
-  const tempsData = tempsVue==='mois' ? tempsMois
-    : tempsVue==='trimestre' ? tempsTrimestre
+  const tempsData = tempsVue === 'mois' ? tempsMois
+    : tempsVue === 'trimestre' ? tempsTrimestre
     : tempsAnnee;
 
   const toutesMachines = [...machines].sort((a:any,b:any) => b.totalArretMinutes - a.totalArretMinutes);
@@ -373,7 +409,13 @@ const TempsArretView = () => {
   return (
     <div className="space-y-6">
       {detailModal && (
-        <DetailModal type={detailModal.type} data={detailModal.data} onClose={() => setDetailModal(null)} />
+        <DetailModal
+          type={detailModal.type}
+          data={detailModal.data}
+          dataTrimestre={detailModal.dataTrimestre}
+          dataAnnee={detailModal.dataAnnee}
+          onClose={() => setDetailModal(null)}
+        />
       )}
 
       {/* ── Filtres ── */}
@@ -382,7 +424,7 @@ const TempsArretView = () => {
           <select value={vm.queryParams?.annee??''} onChange={e=>vm.setAnnee(e.target.value?Number(e.target.value):undefined)}
             className="border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white shadow-sm">
             <option value="">Toutes les années</option>
-            {annees.map((a:number) => <option key={a} value={a}>{a}</option>)}
+            {annees.filter((a:number) => a !== 2026).map((a:number) => <option key={a} value={a}>{a}</option>)}
           </select>
           <select value={vm.queryParams?.trimestre??''} onChange={e=>vm.setTrimestre(e.target.value?Number(e.target.value):undefined)}
             className="border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white shadow-sm">
@@ -476,7 +518,7 @@ const TempsArretView = () => {
               </div>
             </div>
             <ChartActions
-              onDetails={() => setDetailModal({type:'machine',data:machines})}
+              onDetails={() => setDetailModal({type:'machine', data:machines})}
               chartRef={refMachines}
               title="Temps d'Arrêt par Machine"
               accent="orange"
@@ -500,7 +542,7 @@ const TempsArretView = () => {
               </div>
             </div>
             <ChartActions
-              onDetails={() => setDetailModal({type:'produit',data:produits})}
+              onDetails={() => setDetailModal({type:'produit', data:produits})}
               chartRef={refProduits}
               title="Temps d'Arrêt par Produit"
               accent="red"
@@ -536,7 +578,12 @@ const TempsArretView = () => {
               ))}
             </div>
             <ChartActions
-              onDetails={() => setDetailModal({type:'temps',data:tempsData})}
+              onDetails={() => setDetailModal({
+                type: 'temps',
+                data: tempsMois,
+                dataTrimestre: tempsTrimestre,
+                dataAnnee: tempsAnnee,
+              })}
               chartRef={refTemps}
               title="Évolution des Arrêts"
               accent="amber"

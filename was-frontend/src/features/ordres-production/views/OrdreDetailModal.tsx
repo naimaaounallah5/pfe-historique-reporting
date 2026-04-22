@@ -206,7 +206,6 @@ export default function OrdreDetailModal({ vm }: Props) {
                           <td><span className="ord-ref">{op.numeroOperation ?? '-'}</span></td>
                           <td>{op.description ?? '-'}</td>
                           <td>{op.numeroCentreTravail ?? '-'}</td>
-                          <td>{op.groupeCentreTravail ?? '-'}</td>
                           <td>{op.tempsReglage    != null ? `${op.tempsReglage} min`    : '-'}</td>
                           <td>{op.tempsExecution  != null ? `${op.tempsExecution} min`  : '-'}</td>
                           <td>{op.dateDebut ? new Date(op.dateDebut).toLocaleDateString('fr-FR') : '-'}</td>
